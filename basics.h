@@ -1,5 +1,7 @@
 #pragma once
 
+namespace util {
+
 #define MIN_TO_MS 60000
 
 #ifndef ARDUINO
@@ -32,3 +34,13 @@ T wrap(T value, T low, T high) {
     return value;
 }
 
+float wrapf(float value, float low, float high) {
+    return wrap(value, low, high);
+}
+
+float normf(float value, float low, float high) {
+    return constrain((value - low) / (high - low), 0, 1);
+}
+
+
+} // namespace util
