@@ -40,6 +40,7 @@ float wrapf(float value, float low, float high) {
 
 float normf(float value, float low, float high) {
     return constrain((value - low) / (high - low), 0, 1);
+    // return (value - low) / (high - low);
 }
 
 

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "util.h"
+using namespace util;
 
 // TODO idealy remove Arduino dependency here:
 #include <Arduino.h> // for isnan 
@@ -62,7 +63,7 @@ struct GenericErp
 
             ch_norm[i] = util::normf(ch[i], ch_min[i], ch_max[i]);
         }
-        _position = atan2(ch_norm[0], ch_norm[1]); //
+        _position = atan2(ch_norm[0] - 0.5, ch_norm[1] - 0.5);
         _position = util::normf(_position, -PI, PI);
 
         float delta = _position - _position_z1;
@@ -81,6 +82,7 @@ struct GenericErp
     }
 
 private:
+public:
     float _position = 0;
     float _position_z1 = 0;
 
