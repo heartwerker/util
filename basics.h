@@ -29,7 +29,7 @@ T wrap(T value, T low, T high) {
     T range = high - low;
     while (value < low)
         value += range;
-    while (value > high)
+    while (value >= high)
         value -= range;
     return value;
 }
