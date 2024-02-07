@@ -81,8 +81,7 @@ struct GenericErp
         ch_max[i] = max;
     }
 
-private:
-public:
+protected:
     float _position = 0;
     float _position_z1 = 0;
 

@@ -19,5 +19,6 @@ namespace util
         max -= (max - 0) * reset_factor;
 
         Serial.printf("min: %f \t max: %f \t value: %f ", min, max, value);
+        Serial.println();
     }
 }
