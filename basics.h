@@ -4,17 +4,38 @@ namespace util {
 
 #define MIN_TO_MS 60000
 
-#ifndef ARDUINO
+
 template <typename T>
-T constrain(T value, T low, T high) {
+static T map(T value, float inMin, float inMax, float outMin, float outMax)
+{
+    return (value - inMin) / (inMax - inMin) * (outMax - outMin) + outMin;
+}
+
+float clipf(float value, float low, float high)
+{
+    if (value < low)
+        return low;
+    if (value > high)
+        return high;
+    return value;
+}
+
+template <typename T>
+T clip(T value, T low, T high) { return constrain(value, low, high); }
+
+#ifndef ARDUINO 
+template <typename T>
+T clip(T value, T low, T high) {
     if (value < low)
  {
-    if (value < low)        return low;
+    if (value < low)
+        return low;
     if (value > high)
         return high;
     return value;
 }
 #endif
+
 
 float mapf(float value, float fromLow, float fromHigh, float toLow, float toHigh) {
     return (value - fromLow) * (toHigh - toLow) / (fromHigh - fromLow) + toLow;
