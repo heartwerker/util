@@ -9,9 +9,9 @@ public:
     float process(float in)
     {
         _input = in;
-        float error = _target - _input;
+        _error = _target - _input;
         float delta = _input - _input_z1;
-        _output = process_internal(error, delta);
+        _output = process_internal(delta);
 
         _input_z1 = _input;
         
@@ -28,22 +28,22 @@ public:
     float process_unwrap(float in)
     {
         _input = in;
-        float error = wrap(_target - _input, -0.5f, 0.5f);
+        _error = wrap(_target - _input, -0.5f, 0.5f);
         float delta = wrap(_input - _input_z1, -0.5f, 0.5f);
-        _output = process_internal(error, delta);
+        _output = process_internal(delta);
 
         _input_z1 = _input;
         
         return _output;
     }
 
-    float process_internal(float error, float delta_in)
+    float process_internal(float delta_in)
     {
-        _output_ki += _ki * error / float(_processRate);
+        _output_ki += _ki * _error / float(_processRate);
         _output_ki = clipf(_output_ki, -20, 20);
 
         _output = 0;
-        _output += _kp * error;
+        _output += _kp * _error;
         _output += _output_ki;
         _output += _kd * delta_in * float(_processRate) / 1000.0;
 
@@ -69,10 +69,15 @@ public:
         _input_z1 = _input;
     }
 
-    void setTarget(float t) { _target = t; }
+    void setTarget(float t)
+    {
+        _target = t;
+        _error = 1.0;
+    }
 
 public:
     float _target = 0;
+    float _error = 0;
 
     float _kp; // * (P)roportional Tuning Parameter
     float _ki; // * (I)ntegral Tuning Parameter
