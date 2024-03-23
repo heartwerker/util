@@ -62,11 +62,18 @@ public:
         PID::setTarget(t);
     }
 
+    void setParams_StableInRange(float start_fade, float time_stable, float target_range)
+    {
+        _time_start_fade = start_fade;
+        _time_stable = time_stable;
+        _target_range = target_range;
+    }
+
     // ====================================================================
     // parameters
-    time_ms _time_start_fade = 100; 
-    time_ms _time_stable = 500;
-    float _target_range = 0.20;
+    time_ms _time_start_fade = 60; 
+    time_ms _time_stable = 300;
+    float _target_range = 0.15;
 
     // ====================================================================
     float _amplitude_factor = 1.0; // used to fade out after position is reached.
