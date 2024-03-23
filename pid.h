@@ -45,13 +45,15 @@ public:
         _output = 0;
         _output += _kp * _error;
         _output += _output_ki;
+#if 1
+        static float delta = 0;
+        delta += (delta_in - delta) * 0.1; // super simple quick filter
+        delta_in = delta;
+#endif
         _output += _kd * delta_in * float(_processRate) / 1000.0;
 
         _input_z1 = _input;
 
-        _kp = clipf(_kp, 0, 100000);
-        _ki = clipf(_ki, 0, 100000);
-        
         return _output;
     }
 
