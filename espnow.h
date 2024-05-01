@@ -4,20 +4,11 @@
 #if ESP8266
 #include <ESP8266WiFi.h>
 #include <espnow.h>
-#include "../config.h"
 #elif ESP32  // https://randomnerdtutorials.com/esp-now-esp32-arduino-ide/
 #include <esp_now.h>
 #include <WiFi.h>
 esp_now_peer_info_t peerInfo;
 #endif
-
-// ========================= PROTOCOL =========================
-typedef struct message_from_remote
-{
-    int8_t dir = 0;
-} message_from_remote;
-
-message_from_remote msg_from_remote;
 
 // ========================= PROTOCOL =========================
 typedef struct message_generic
@@ -30,23 +21,8 @@ message_generic msg;
 
 //================================================================
 
-// TODO move these MAC addresses to config !?
 
-// main alarm : A0:B7:65:F5:90:D4
-uint8_t MAC_ADDRESS_LIGHT[6] = {0x08, 0x3A, 0x8D, 0xCC, 0xC1, 0x0A}; // "led-base-02 for leo "
-#if USER_IS_LEO
-uint8_t MAC_ADDRESS_LIGHT[6] = {0x08, 0x3A, 0x8D, 0xCC, 0xC1, 0x0A}; // "led-base-02 for leo "
-#elif USER_IS_JANEK
-uint8_t MAC_ADDRESS_LIGHT[6] = {0x08, 0x3A, 0x8D, 0xD1, 0xB5, 0x00}; // 08:3a:8d:d1:b5:00 "halo light "
-#elif USER_IS_DAVE
-uint8_t MAC_ADDRESS_LIGHT[6] = {0x08, 0x3A, 0x8D, 0xCC, 0x5A, 0xAE}; // "led-base-04 bedlight dave"
-#endif
-
-uint8_t MAC_ADDRESS_COFFEE[6] = {0x08, 0x3A, 0x8D, 0xD1, 0xA7, 0x2A}; // polywaker-coffee-01
-
-// uint8_t MAC_ADDRESS_MUSIC[6] = {0xA0, 0xB7, 0x65, 0xF5, 0xF8, 0x0C}; // "device_wake_music"
-
-uint8_t *address_target = nullptr;
+uint8_t *_address_target = nullptr;
 
 typedef void (*esp_now_send_cb_t)(const uint8_t *mac_addr, esp_now_send_status_t status);
 //================================================================
@@ -71,19 +47,19 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 #endif
 
 typedef void (*ESPNOW_RX_data_callback)(uint8_t *data, uint8_t len);
-ESPNOW_RX_data_callback receiveBytes = nullptr;
+ESPNOW_RX_data_callback _receiveBytes = nullptr;
 
 #if ESP8266
 void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len)
 {
-    if (receiveBytes != nullptr)
-        receiveBytes(incomingData, len);
+    if (_receiveBytes != nullptr)
+        _receiveBytes(incomingData, len);
 }
 #elif ESP32
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) 
 {
-    if (receiveBytes != nullptr)
-        receiveBytes((uint8_t *)incomingData, len);
+    if (_receiveBytes != nullptr)
+        _receiveBytes((uint8_t *)incomingData, len);
 }
 #endif
 
@@ -101,10 +77,10 @@ void ESPNOW_registerReceiver(unsigned char *address)
     }
 }
 
-void ESPNOW_Init(ESPNOW_RX_data_callback callback)
+void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_mac_address)
 {
-    receiveBytes = callback;
-    address_target = MAC_ADDRESS_LIGHT;
+    _receiveBytes = callback;
+    _address_target = target_mac_address;
 
 #if 1 // todo is this necessary ?
     // Set device as a Wi-Fi Station
@@ -124,34 +100,37 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback)
     esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
 #endif
 
+    if (_address_target != nullptr)
+    {
     // Once ESPNow is successfully Init, we will register for Send CB to
     // get the status of Trasnmitted packet
     esp_now_register_send_cb(OnDataSent);
-
 #if ESP8266
-    // Register peer
-    esp_now_add_peer(address_target, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
-
+        esp_now_add_peer(_address_target, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
 #elif ESP32
-   // ESPNOW_registerReceiver(address_target);
-   
-    ESPNOW_registerReceiver(MAC_ADDRESS_LIGHT);
-    ESPNOW_registerReceiver(MAC_ADDRESS_COFFEE);
-    // ESPNOW_registerReceiver(MAC_ADDRESS_MUSIC);
+        ESPNOW_registerReceiver(_address_target);
 #endif
-    // Register for a callback function that will be called when data is received
-    esp_now_register_recv_cb(OnDataRecv);
+    }
+
+    if (_receiveBytes != nullptr)
+    {
+        // Register for a callback function that will be called when data is received
+        esp_now_register_recv_cb(OnDataRecv);
+    }
 
     Serial.println("ESPNOW_Init() done");
 }
 
-void ESPNOW_Init()
-{
-    ESPNOW_Init(nullptr);
-}
-
 void ESPNOW_sendBytes(uint8_t *data, uint8_t len)
 {
-    if (address_target != nullptr)
-        esp_now_send(address_target, data, len);
+    if (_address_target != nullptr)
+        esp_now_send(_address_target, data, len);
+}
+
+void ESPNOW_send_generic(uint8_t *target, int index, float value)
+{
+    message_generic msg;
+    msg.index = index;
+    msg.value = constrain(value, 0, 1);
+    esp_now_send(target, (uint8_t *)&msg, sizeof(msg));
 }
