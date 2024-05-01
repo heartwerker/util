@@ -48,7 +48,7 @@ public:
             if (since_reverse > 5000)
             {
                 since_reverse = 0;
-                setSpeed(-target);
+                setSpeed(-_target);
             }
 #endif
         }
@@ -56,15 +56,14 @@ public:
 
     void setSpeed(float percentage)
     {
-        percentage = constrain(percentage, -1.0f, 1.0f);
-        target = percentage;
+        _target = constrain(percentage, -1.0f, 1.0f);
     }
 
     void applySpeed()
     {
-        actual += (target - actual) * 0.0201f;
-        float output = (invert_dir ? -1 : 1) * actual;
-
+        _actual += (_target - _actual) * 0.0101f;
+        // _actual = _target;
+        float output = (invert_dir ? -1 : 1) * _actual;
 
         float pwm1, pwm2 = 0;
         if (output > 0)
@@ -84,29 +83,25 @@ public:
         if (since_update > 100)
         {
             since_update = 0;
-            Serial.printf("target: \t%2.2f actual: \t%2.2f -> pwm1: \t%2.2f  pwm2: \t%2.2f  | ", target, actual, pwm1, pwm2);
+            Serial.printf("_target: \t%2.2f _actual: \t%2.2f -> pwm1: \t%2.2f  pwm2: \t%2.2f  | ", _target, _actual, pwm1, pwm2);
             Serial.println();
         }
     }
 
 public:
-    float percent = 0;
     int dir = 1;
     int index = 0;
     elapsedMillis since_update = 0;
 
-    uint8_t feedback_speed_pin;
-    int counter_speed_pulse = 0;
-
-    bool invert_dir = false;
+    bool invert_dir = true;
 
 private:
     elapsedMillis since_loop = 0;
     elapsedMillis since_count = 0;
     elapsedMillis since_reverse = 0;
-    float speed = 0;
-    float target = 0;
-    float actual = 0;
+
+    float _target = 0; // _target_speed
+    float _actual = 0; // _actual_speed
 
     struct PINS {
         uint8_t ENABLE; // = L_EN + R_EN as 1 pin

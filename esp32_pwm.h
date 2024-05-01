@@ -31,11 +31,13 @@ struct ESP32_PWM
 
     static void init()
     {
-        ledcSetup(_num_ch, frequency, resolution);
+        // ledcSetup(_num_ch, frequency, resolution);
 
         for (int n = 0; n < _num_ch; n++)
+        {
+            ledcSetup(_ch[n].num, frequency, resolution);
             ledcAttachPin(_ch[n].pin, _ch[n].num);
-
+        }
     }
 
     static void set(int pin, float value) // 0-1
@@ -48,8 +50,11 @@ struct ESP32_PWM
                 ch = _ch[n].num;
                 break;
             }
-
-        ledcWrite(ch, resolution_range * value);
+        if (ch == -1)
+            Serial.printf("ALARM, pin %d not found\n", pin);
+            
+        uint32_t duty = float(resolution_range) * value;
+        ledcWrite(ch, duty);
     }
 };
 
