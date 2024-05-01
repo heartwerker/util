@@ -80,11 +80,14 @@ public:
         ESP32_PWM::set(_pins.LPWM, pwm1);
         ESP32_PWM::set(_pins.RPWM, pwm2);
 
-        if (since_update > 100)
+        if (since_update > 1000)
         {
-            since_update = 0;
-            Serial.printf("_target: \t%2.2f _actual: \t%2.2f -> pwm1: \t%2.2f  pwm2: \t%2.2f  | ", _target, _actual, pwm1, pwm2);
-            Serial.println();
+            if (_target == 0)
+                since_update = 800;
+            else
+                since_update = 0;
+
+            Serial.printf("_target: \t%2.2f _actual: \t%2.2f -> pwm1: \t%2.2f  pwm2: \t%2.2f   \n", _target, _actual, pwm1, pwm2);
         }
     }
 
