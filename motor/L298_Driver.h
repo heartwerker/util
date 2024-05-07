@@ -2,7 +2,6 @@
 
 #include <Arduino.h>
 #include <elapsedMillis.h>
-#include "helper.h"
 
 #define PWM_FRQUENCY 8000
 #define PWM_RANGE 1024
@@ -19,8 +18,10 @@ public:
     {
         pinMode(control_pin1, OUTPUT);
         pinMode(control_pin2, OUTPUT);
+#if !ESP32
         analogWriteFreq(PWM_FRQUENCY);
         analogWriteRange(PWM_RANGE);
+#endif
     }
 
     void computeSpeed()
@@ -76,7 +77,7 @@ public:
             pwm1 = 0;
             pwm2 = clipf(fabs(output), 0, 1) * float(PWM_RANGE - 1);
         }
-        
+
         analogWrite(control_pin1, pwm1);
         analogWrite(control_pin2, pwm2);
 
@@ -110,4 +111,3 @@ private:
     uint8_t control_pin1;
     uint8_t control_pin2;
 };
-
