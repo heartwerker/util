@@ -45,6 +45,16 @@ float mapConstrainf(float value, float fromLow, float fromHigh, float toLow, flo
     return constrain(mapf(value, fromLow, fromHigh, toLow, toHigh), toLow, toHigh);
 }
 
+float mapConstrainf_withCenter(float value, float fromLow, float fromCenter, float fromHigh, float toLow, float toHigh)
+{
+    if (value == fromCenter)
+        return (toLow + (toHigh - toLow) / 2.0f);
+    else if (value < fromCenter)
+        return mapConstrainf(value, fromLow, fromCenter, toLow, 0);
+    else
+        return mapConstrainf(value, fromCenter, fromHigh, 0, toHigh);
+}
+
 template <typename T>
 T wrap(T value, T low, T high) {
     T range = high - low;
