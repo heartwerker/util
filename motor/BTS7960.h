@@ -31,7 +31,7 @@ public:
 
         ESP32_PWM::add(_pins.LPWM);
         ESP32_PWM::add(_pins.RPWM);
-        ESP32_PWM::init(300);
+        ESP32_PWM::init(20000);
 
         pinMode(_pins.ENABLE, OUTPUT);
         digitalWrite(_pins.ENABLE, HIGH);
@@ -76,7 +76,7 @@ public:
 
     void applySpeed()
     {
-        _actual += (_target - _actual) * 0.0101f;
+        simpleFilterf(_actual, _target, 0.02);
         // _actual = _target;
         float output = (invert_dir ? -1 : 1) * _actual;
 
