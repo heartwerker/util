@@ -4,7 +4,6 @@
 struct ESP32_PWM
 {
     // PWM properties
-    static const int frequency = 20000; // 80;
     static const int resolution = 8;
     static const int resolution_range = (1 << resolution);
     static const int MAX_CH = 17;
@@ -29,13 +28,14 @@ struct ESP32_PWM
         _num_ch++;
     }
 
-    static void init()
+
+    static void init(int freq = 20000)
     {
         // ledcSetup(_num_ch, frequency, resolution);
 
         for (int n = 0; n < _num_ch; n++)
         {
-            ledcSetup(_ch[n].num, frequency, resolution);
+            ledcSetup(_ch[n].num, freq, resolution);
             ledcAttachPin(_ch[n].pin, _ch[n].num);
         }
     }

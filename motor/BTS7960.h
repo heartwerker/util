@@ -11,7 +11,6 @@ using namespace util;
 // #define PWM_FRQUENCY 20000
 // #define PWM_RANGE 1024
 
-
 struct BTS7960_Driver
 {
 
@@ -32,18 +31,34 @@ public:
 
         ESP32_PWM::add(_pins.LPWM);
         ESP32_PWM::add(_pins.RPWM);
-        ESP32_PWM::init();
+        ESP32_PWM::init(300);
 
         pinMode(_pins.ENABLE, OUTPUT);
         digitalWrite(_pins.ENABLE, HIGH);
+
+        pinMode(_pins.L_IS, INPUT);
+        pinMode(_pins.R_IS, INPUT);
     }
 
     void loop()
     {
+#define filter_val 0.001
+        simpleFilterf(_current_L, float(analogRead(_pins.L_IS)) / 4095.0, filter_val);
+        simpleFilterf(_current_R, float(analogRead(_pins.R_IS)) / 4095.0, filter_val);
+
+        _current = _current_L - _current_R;
+
         if (since_loop > 5)
         {
             since_loop = 0;
             applySpeed();
+
+
+
+
+#if 0
+            printf("Current L:\t%2.2f\tCurrent R:\t%2.2f\n", _current_L, _current_R);
+#endif
 #if 0
             if (since_reverse > 5000)
             {
@@ -76,7 +91,7 @@ public:
             pwm1 = 0;
             pwm2 = clipf(fabs(output), 0, 1);
         }
-        
+
         ESP32_PWM::set(_pins.LPWM, pwm1);
         ESP32_PWM::set(_pins.RPWM, pwm2);
 
@@ -86,8 +101,9 @@ public:
                 since_update = 800;
             else
                 since_update = 0;
-
+#if 0
             Serial.printf("_target: \t%2.2f _actual: \t%2.2f -> pwm1: \t%2.2f  pwm2: \t%2.2f   \n", _target, _actual, pwm1, pwm2);
+#endif
         }
     }
 
@@ -98,6 +114,13 @@ public:
 
     bool invert_dir = true;
 
+    float _current_L = 0;
+    float _current_R = 0;
+
+    float _current = 0;
+    float _current_dif = 0;
+
+
 private:
     elapsedMillis since_loop = 0;
     elapsedMillis since_count = 0;
@@ -106,14 +129,14 @@ private:
     float _target = 0; // _target_speed
     float _actual = 0; // _actual_speed
 
-    struct PINS {
+    struct PINS
+    {
         uint8_t ENABLE; // = L_EN + R_EN as 1 pin
-        uint8_t LPWM; // direction + speed
-        uint8_t RPWM; // direction + speed
-        uint8_t L_IS; // current sense
-        uint8_t R_IS; // current sense
+        uint8_t LPWM;   // direction + speed
+        uint8_t RPWM;   // direction + speed
+        uint8_t L_IS;   // current sense
+        uint8_t R_IS;   // current sense
     };
 
     PINS _pins;
 };
-
