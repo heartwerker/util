@@ -142,9 +142,11 @@ void ESPNOW_send_generic(uint8_t *target, int index, float value)
     msg.index = index;
     msg.value = constrain(value, -1, 1);
     esp_now_send(target, (uint8_t *)&msg, sizeof(msg));
+#if 0
     char macStr[18];
     snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X", target[0], target[1], target[2], target[3], target[4], target[5]);
     Serial.printf("ESPNOW_send_generic(%s, %d, %f)\n", macStr, index, value);
+#endif
 }
 
 void ESPNOW_send_generic(int index, float value)
