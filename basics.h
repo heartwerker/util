@@ -4,6 +4,7 @@ namespace util {
 
 #define MIN_TO_MS 60000
 
+int sign(float value) { return (value > 0) - (value < 0); }
 
 template <typename T>
 static T map(T value, float inMin, float inMax, float outMin, float outMax)
