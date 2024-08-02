@@ -6,3 +6,10 @@ is a general purpose (arduino) "library"
 ```
 git submodule add https://www.github.com/heartwerker/util lib/util
 ```
+
+
+
+# problems building.
+
+try: pio lib update
+
