@@ -116,7 +116,7 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], 
         if (_targets[t] != nullptr)
         {
 #if ESP8266
-            esp_now_add_peer(_targets[0], ESP_NOW_ROLE_COMBO, 1, NULL, 0);
+            esp_now_add_peer(_targets[t], ESP_NOW_ROLE_COMBO, 1, NULL, 0);
 #elif ESP32
             ESPNOW_registerReceiver(_targets[t]);
 #endif
@@ -134,6 +134,8 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], 
 void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_mac_address)
 {
     ESPNOW_Init(callback, &target_mac_address, 1);
+
+    printf("ESPNOW_init:: device macAddress = %s\n", WiFi.macAddress().c_str());
 }
 
 void ESPNOW_sendBytes(uint8_t *data, uint8_t len)
