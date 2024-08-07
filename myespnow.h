@@ -90,11 +90,14 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], 
     for (int i = 0; i < num_targets; i++)
         _targets[i] = target_addresses[i];
 
-#if 1 // todo is this necessary ?
+#if 0 // todo is this necessary ?
     // Set device as a Wi-Fi Station
-    // WiFi.mode(WIFI_STA);
     WiFi.mode(WIFI_AP_STA);
+    // WiFi.mode(WIFI_STA);
     // WiFi.disconnect();
+#else // old working esp8266 espnow_protocol.h
+    WiFi.mode(WIFI_STA);
+    WiFi.disconnect();
 #endif
 
     if (esp_now_init() != 0)
@@ -110,7 +113,8 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], 
 
     // Once ESPNow is successfully Init, we will register for Send CB to
     // get the status of Trasnmitted packet
-    esp_now_register_send_cb(OnDataSent);
+    if (num_targets != 0)
+        esp_now_register_send_cb(OnDataSent);
 
     for (int t = 0; t < num_targets; t++)
         if (_targets[t] != nullptr)
@@ -131,6 +135,11 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], 
 
     Serial.println("ESPNOW_Init() done");
 
+    printf("ESPNOW_init:: device macAddress = %s\n", WiFi.macAddress().c_str());
+
+    if (num_targets != 0)
+    {
+        
     delay(1000);
     for (int t = 0; t < num_targets; t++)
         if (_targets[t] != nullptr)
@@ -139,13 +148,15 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], 
             ESPNOW_send_generic(_targets[t], 0, 0);
             delay(1000);
         }
+    }
 }
 
 void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_mac_address)
 {
-    ESPNOW_Init(callback, &target_mac_address, 1);
-
-    printf("ESPNOW_init:: device macAddress = %s\n", WiFi.macAddress().c_str());
+    if (target_mac_address == nullptr)
+        ESPNOW_Init(callback, nullptr, 0);
+    else
+        ESPNOW_Init(callback, &target_mac_address, 1);
 }
 
 void ESPNOW_sendBytes(uint8_t *data, uint8_t len)
