@@ -56,6 +56,24 @@ float mapConstrainf_withCenter(float value, float fromLow, float fromCenter, flo
         return mapConstrainf(value, fromCenter, fromHigh, 0, toHigh);
 }
 
+
+/**
+ * @brief Applies center hysteresis to the given value.
+ * 
+ * @param value The input value to apply center hysteresis to. (expects a value from -1 to +1 )
+ * @param deadzone_width The width of the deadzone around zero.
+ * @return The mapped value within the range from -1 to +1.
+ */
+float centerHysteris(float value, float deadzone_width)
+{
+    if (value > deadzone_width)
+        return mapf(value, deadzone_width, 1, 0, 1);
+    else if (value < -deadzone_width)
+        return mapf(value, -deadzone_width, -1, 0, -1);
+    else
+        return 0;
+}
+
 template <typename T>
 T wrap(T value, T low, T high) {
     T range = high - low;

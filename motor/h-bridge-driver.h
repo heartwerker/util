@@ -121,8 +121,7 @@ public:
         if (since_update > 100)
         {
             since_update = 0;
-            Serial.printf("target: %2.2f - speed: %2.2f -> pwm1: %d  pwm2: %4d  | ", target, current, pwm1, pwm2);
-            Serial.println();
+            Serial.printf("target: %2.2f - speed: %2.2f -> pwm1: %d  pwm2: %4d  | ", target, current, pwm1, pwm2); Serial.println();
         }
     }
 
