@@ -1,4 +1,5 @@
 #pragma once
+#if ESP32
 
 #include <Arduino.h>
 #include <elapsedMillis.h>
@@ -140,3 +141,5 @@ private:
 
     PINS _pins;
 };
+
+#endif

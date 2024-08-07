@@ -37,6 +37,8 @@
 #include <Arduino.h>
 #include <elapsedMillis.h>
 
+#include "../basics.h"
+
 #define PWM_FRQUENCY 8000
 #define PWM_RANGE 1024
 
@@ -104,13 +106,13 @@ public:
         int pwm1, pwm2 = 0;
         if (output > 0)
         {
-            pwm1 = clipf(fabs(output), 0, 1) * float(PWM_RANGE - 1);
+            pwm1 = util::clipf(fabs(output), 0, 1) * float(PWM_RANGE - 1);
             pwm2 = 0;
         }
         else
         {
             pwm1 = 0;
-            pwm2 = clipf(fabs(output), 0, 1) * float(PWM_RANGE - 1);
+            pwm2 = util::clipf(fabs(output), 0, 1) * float(PWM_RANGE - 1);
         }
 
         analogWrite(control_pin1, pwm1);

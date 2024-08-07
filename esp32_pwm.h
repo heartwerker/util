@@ -1,4 +1,5 @@
 #pragma once
+#if ESP32
 #include <Arduino.h>
 
 struct ESP32_PWM
@@ -61,3 +62,6 @@ struct ESP32_PWM
 // Define _num_ch and _ch
 int ESP32_PWM::_num_ch = 0;
 ESP32_PWM::PWM_CH ESP32_PWM::_ch[MAX_CH];
+
+
+#endif

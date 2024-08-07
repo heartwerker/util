@@ -2,8 +2,8 @@
 #include <Arduino.h>
 
 #if ESP8266
-#include <ESP8266WiFi.h>
 #include <espnow.h>
+#include <ESP8266WiFi.h>
 #elif ESP32 // https://randomnerdtutorials.com/esp-now-esp32-arduino-ide/
 #include <esp_now.h>
 #include <WiFi.h>
@@ -24,7 +24,7 @@ message_generic msg;
 #define NUM_MAX_TARGETS 5
 uint8_t *_targets[NUM_MAX_TARGETS] = {nullptr, nullptr, nullptr, nullptr, nullptr};
 
-typedef void (*esp_now_send_cb_t)(const uint8_t *mac_addr, esp_now_send_status_t status);
+// typedef void (*esp_now_send_cb_t)(const uint8_t *mac_addr, esp_now_send_status_t status);
 //================================================================
 #if ESP8266
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus)
@@ -65,6 +65,7 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len)
 
 void ESPNOW_registerReceiver(unsigned char *address)
 {
+    #if ESP32
     // Register peer
     memcpy(peerInfo.peer_addr, address, 6);
     peerInfo.channel = 0;
@@ -75,6 +76,11 @@ void ESPNOW_registerReceiver(unsigned char *address)
         Serial.println("Failed to add peer");
         return;
     }
+    #elif ESP8266
+
+     // TODO 
+
+    #endif
 }
 
 void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], int num_targets)
