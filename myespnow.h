@@ -29,11 +29,8 @@ uint8_t *_targets[NUM_MAX_TARGETS] = {nullptr, nullptr, nullptr, nullptr, nullpt
 #if ESP8266
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus)
 {
-#if 0
-    if (sendStatus == 0)
-        Serial.print("Delivery success  - ");
-    else
-        Serial.print("Delivery fail     - ");
+#if 1
+    printf("Delivery %s - ", sendStatus == 0 ? "success! \b" : "FAIL!!! \n");
 #endif
 }
 #elif ESP32
