@@ -30,7 +30,7 @@ uint8_t *_targets[NUM_MAX_TARGETS] = {nullptr, nullptr, nullptr, nullptr, nullpt
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus)
 {
 #if 1
-    printf("Delivery %s - ", sendStatus == 0 ? "success! \b" : "FAIL!!! \n");
+    printf("Delivery %s", (sendStatus == 0) ? "success! \n" : "FAIL!!! \n");
 #endif
 }
 #elif ESP32
@@ -80,6 +80,9 @@ void ESPNOW_registerReceiver(unsigned char *address)
     #endif
 }
 
+void ESPNOW_send_generic(uint8_t *target, int index, float value);
+void ESPNOW_send_generic(int index, float value);
+
 void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], int num_targets)
 {
     _receiveBytes = callback;
@@ -113,10 +116,11 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], 
         if (_targets[t] != nullptr)
         {
 #if ESP8266
-            esp_now_add_peer(_targets[t], ESP_NOW_ROLE_COMBO, 1, NULL, 0);
+            esp_now_add_peer(_targets[t], ESP_NOW_ROLE_COMBO, 1 + t, NULL, 0);
 #elif ESP32
             ESPNOW_registerReceiver(_targets[t]);
 #endif
+            Serial.printf("ESPNOW_Init:: registered target with MAC: %02X:%02X:%02X:%02X:%02X:%02X\n", _targets[t][0], _targets[t][1], _targets[t][2], _targets[t][3], _targets[t][4], _targets[t][5]);
         }
 
     if (_receiveBytes != nullptr)
@@ -126,6 +130,15 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], 
     }
 
     Serial.println("ESPNOW_Init() done");
+
+    delay(1000);
+    for (int t = 0; t < num_targets; t++)
+        if (_targets[t] != nullptr)
+        {
+            Serial.printf("ESPNOW_Init:: sending test message to target with id: %d\n", t);
+            ESPNOW_send_generic(_targets[t], 0, 0);
+            delay(1000);
+        }
 }
 
 void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_mac_address)
@@ -147,7 +160,7 @@ void ESPNOW_send_generic(uint8_t *target, int index, float value)
     msg.index = index;
     msg.value = constrain(value, -1, 1);
     esp_now_send(target, (uint8_t *)&msg, sizeof(msg));
-#if 0
+#if 1
     char macStr[18];
     snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X", target[0], target[1], target[2], target[3], target[4], target[5]);
     Serial.printf("ESPNOW_send_generic(%s, %d, %f)\n", macStr, index, value);
