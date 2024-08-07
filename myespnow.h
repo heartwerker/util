@@ -124,7 +124,7 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], 
 #elif ESP32
             ESPNOW_registerReceiver(_targets[t]);
 #endif
-            Serial.printf("ESPNOW_Init:: registered target with MAC: %02X:%02X:%02X:%02X:%02X:%02X\n", _targets[t][0], _targets[t][1], _targets[t][2], _targets[t][3], _targets[t][4], _targets[t][5]);
+            Serial.printf("ESPNOW_Init:: registered target with MAC = %02X:%02X:%02X:%02X:%02X:%02X\n", _targets[t][0], _targets[t][1], _targets[t][2], _targets[t][3], _targets[t][4], _targets[t][5]);
         }
 
     if (_receiveBytes != nullptr)
@@ -135,7 +135,7 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], 
 
     Serial.println("ESPNOW_Init() done");
 
-    printf("ESPNOW_init:: device macAddress = %s\n", WiFi.macAddress().c_str());
+    printf("ESPNOW_init:: this device's MAC = %s\n", WiFi.macAddress().c_str());
 
     if (num_targets != 0)
     {
