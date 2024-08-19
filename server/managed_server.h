@@ -71,13 +71,13 @@ public:
         Serial.printf("HTTP server started here: http://%s\n", WiFi.localIP().toString().c_str());
     }
 
-    void setup(const char *softAPName)
+    void setup(const char *name)
     {
         initFS();
         if (!initWiFi()) // start basic captive wifi manager if not connected
         {
             Serial.println("Setting AP (Access Point)");
-            WiFi.softAP(softAPName, NULL);
+            WiFi.softAP("AP: " + String(name), NULL);
 
             dnsServer.start(53, "*", WiFi.softAPIP());
 
@@ -121,6 +121,11 @@ public:
         {
             _soft_AP_active = false;
         }
+
+        if (!MDNS.begin(name))
+            Serial.println("Error setting up mDNS responder!");
+        else
+            Serial.println("mDNS responder started");
     }
 
     void loop()
