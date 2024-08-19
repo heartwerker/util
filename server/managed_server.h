@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ESPAsyncWebServer/src/ESPAsyncWebServer.h"
+#include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
 
 #include "minimal_wifimanager.h"
