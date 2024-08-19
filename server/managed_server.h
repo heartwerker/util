@@ -2,9 +2,11 @@
 
 #include <ESPAsyncWebServer.h>
 #include <DNSServer.h>
+#include <ESPmDNS.h> // for name.local resolution
 
 #include "minimal_wifimanager.h"
 #include "spiffs_helper.h"
+
 
 class CaptiveRequestHandler : public AsyncWebHandler
 {
@@ -77,7 +79,8 @@ public:
         if (!initWiFi()) // start basic captive wifi manager if not connected
         {
             Serial.println("Setting AP (Access Point)");
-            WiFi.softAP("AP: " + String(name), NULL);
+
+            WiFi.softAP("AP: " + String(name));
 
             dnsServer.start(53, "*", WiFi.softAPIP());
 
