@@ -1,7 +1,7 @@
 #pragma once
 
 #include "socket_server.h"
-#include "parameter_manager.h"
+#include "parameter_data.h"
 
 class ParameterServer : public SocketServer
 {
@@ -34,7 +34,7 @@ public:
 
     // TODO why "type" and not "name" ?
     // Sends a JSON object to all connected WebSocket clients
-    void sendJson(const ParameterManager::Parameter &param)
+    void sendJson(const ParameterData::Parameter &param)
     {
         if (webSocket.connectedClients() > 0)
         { // Only send if there are connected clients
@@ -49,7 +49,7 @@ public:
     }
     // TODO why "type" and not "name" ?
     // Sends a JSON object to all connected WebSocket clients
-    void sendJson(const ParameterManager::Parameter* pParam)
+    void sendJson(const ParameterData::Parameter* pParam)
     {
         if (webSocket.connectedClients() > 0)
         { // Only send if there are connected clients
@@ -105,7 +105,7 @@ public:
             sendJson(*param);
     }
 
-    bool parse(StaticJsonDocument<200> *pDoc, ParameterManager::Parameter *parameter)
+    bool parse(StaticJsonDocument<200> *pDoc, ParameterData::Parameter *parameter)
     {
         const String type = static_cast<const char *>((*pDoc)["type"]);
         const int value = (*pDoc)["value"];
@@ -122,7 +122,7 @@ public:
 
 
 public:
-    ParameterManager *pData = nullptr;
+    ParameterData *pData = nullptr;
 };
 
 

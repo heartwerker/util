@@ -21,7 +21,7 @@
 // ---------------------------------------------------------------------------------------
 
 // ==============================
-class ParameterManager
+class ParameterData
 {
 public:
     
@@ -30,7 +30,7 @@ public:
         String name;
         int value;
 
-        Parameter(ParameterManager* parent, const String& name, int default_value) : 
+        Parameter(ParameterData* parent, const String& name, int default_value) : 
         name(name), 
         value(default_value) {
             parent->register_parameter(this);
@@ -48,7 +48,7 @@ public:
 
     bool save() const
     {
-        Serial.println("ParameterManager::save() !!! ");
+        Serial.println("ParameterData::save() !!! ");
 
         File parameterFile = SPIFFS.open(PARAMETER_FILE_NAME, "w");
         if (!parameterFile)
@@ -76,7 +76,7 @@ public:
     {
         initFS();
         
-        Serial.println("ParameterManager::load() !!! ");
+        Serial.println("ParameterData::load() !!! ");
         File parameterFile = SPIFFS.open(PARAMETER_FILE_NAME, "r");
         if (!parameterFile)
         {
@@ -175,4 +175,4 @@ public:
 };
 
 
-using ParameterList = std::vector<ParameterManager::Parameter *>;
+using ParameterList = std::vector<ParameterData::Parameter *>;
