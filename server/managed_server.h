@@ -125,10 +125,6 @@ public:
             _soft_AP_active = false;
         }
 
-        if (!MDNS.begin("motion"))
-            Serial.println("Error setting up mDNS responder!");
-        else
-            Serial.printf("mDNS responder started: http://%s.local\n", name);
 
         return (!_soft_AP_active);
     }

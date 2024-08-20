@@ -28,7 +28,7 @@ public:
             webSocket.onEvent(callback); // define a callback function -> what does the ESP32 need to do when an event from the websocket is received? -> run function "webSocketEvent()"
             webSocket.begin();           // start websocket
 
-            ManagedServer::begin(); // start server after the websocket
+            // ManagedServer::begin(); // start server after the websocket
         }
         else {
             Serial.println("SocketServer::setup failed()");
