@@ -1,6 +1,7 @@
 #pragma once
 
 #include "socket_server.h"
+#include "config_user.h"
 
 class ParameterServer : public SocketServer
 {
@@ -11,6 +12,12 @@ public:
 
     bool setup(const char *name, Websocket_Callback callback)
     {
+        config.load();
+
+        Serial.printf("Loaded user config.parameters: (%d) \n", config.parameters.size());
+        for (auto param : config.parameters)
+            Serial.printf("%s: %d\n", param->name.c_str(), param->value);
+        
         Serial.println("Setting up ParameterServer");
         SocketServer::setup(name, callback);
 
@@ -73,5 +80,9 @@ public:
             webSocket.broadcastTXT(jsonString);
         }
     }
-
+    
+public:
+    Config config;
 };
+
+

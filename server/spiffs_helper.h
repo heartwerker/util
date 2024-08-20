@@ -3,10 +3,17 @@
 #include <Arduino.h>
 #include <SPIFFS.h>
 
+bool _spiffsStarted = false;
+
 void initFS()
 {
-  if (!SPIFFS.begin())
-    Serial.println("SPIFFS could not initialize");
+  if (!_spiffsStarted)
+  {
+    if (!SPIFFS.begin())
+      Serial.println("SPIFFS could not initialize");
+    else
+      _spiffsStarted = true;
+  }
 }
 
 String readFile(const char *path)
