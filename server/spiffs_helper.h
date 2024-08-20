@@ -32,7 +32,7 @@ String readFile(const char *path)
     fileContent = file.readStringUntil('\n');
     break;
   }
-  Serial.printf("Reading file: %s\r - contents: '%s'\r\n", path, fileContent.c_str());
+  Serial.printf("Reading file: %s = '%s'\n", path, fileContent.c_str());
   return fileContent;
 }
 

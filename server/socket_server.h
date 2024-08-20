@@ -15,7 +15,7 @@ public:
 
     bool setup(const char *name, Websocket_Callback callback)
     {
-        Serial.println("Setting up SocketServer");
+        Serial.println("SocketServer::setup()");
 
         if (ManagedServer::setup(name))
         {

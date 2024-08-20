@@ -12,13 +12,13 @@ public:
 
     bool setup(const char *name, Websocket_Callback callback)
     {
+        Serial.println("ParameterServer::setup()");
         data.load();
 
         Serial.printf("Loaded user data.parameters: (%d) \n", data.parameters.size());
         for (auto param : data.parameters)
             Serial.printf("%s: %d\n", param->name.c_str(), param->value);
         
-        Serial.println("Setting up ParameterServer");
         SocketServer::setup(name, callback);
 
         return true;

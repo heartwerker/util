@@ -75,7 +75,7 @@ public:
 
     bool setup(const char *name)
     {
-        Serial.println("Setting up managed_server");
+        Serial.println("ManagedServer::setup()");
         
         initFS();
         if (!initWiFi()) // start basic captive wifi manager if not connected
