@@ -49,14 +49,10 @@ public:
 
         _current = _current_L - _current_R;
 
-        if (since_loop > 5)
+        if (since_loop >= 5)
         {
             since_loop = 0;
             applySpeed();
-
-
-
-
 #if 0
             printf("Current L:\t%2.2f\tCurrent R:\t%2.2f\n", _current_L, _current_R);
 #endif
