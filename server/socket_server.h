@@ -19,16 +19,19 @@ public:
 
         if (ManagedServer::setup(name))
         {
+            ManagedServer::serveStatic("/", SPIFFS, "/");
             ManagedServer::on("/", HTTP_GET, [](AsyncWebServerRequest *request)
                               { request->send(SPIFFS, "/index.html", "text/html"); });
             ManagedServer::onNotFound([](AsyncWebServerRequest *request)
                                       { request->send(404, "text/plain", "File not found"); });
-            ManagedServer::serveStatic("/", SPIFFS, "/");
 
-            webSocket.begin();           // start websocket
             webSocket.onEvent(callback); // define a callback function -> what does the ESP32 need to do when an event from the websocket is received? -> run function "webSocketEvent()"
+            webSocket.begin();           // start websocket
 
             ManagedServer::begin(); // start server after the websocket
+        }
+        else {
+            Serial.println("SocketServer::setup failed()");
         }
         return true;
     }

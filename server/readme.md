@@ -1,4 +1,8 @@
 
 
 # add to platformio.ini
-lib_deps = ESP Async WebServer
+
+lib_deps = 
+	https://github.com/me-no-dev/ESPAsyncWebServer
+	links2004/WebSockets@^2.4.1
+	bblanchon/ArduinoJson@^6.21.3
