@@ -9,7 +9,6 @@ public:
     ParameterServer() : SocketServer()
     {
     }
-
     bool setup(const char *name, Websocket_Callback callback)
     {
         Serial.println("ParameterServer::setup()");

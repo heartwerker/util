@@ -8,6 +8,18 @@
 #define PARAMETER_FILE_NAME "/parameter.json"
 
 
+// ---------------------------------------------------------------------------------------
+// Server utilizes WiFi, WebSockets, and JSON for configuration and control.
+//
+// Requires SPIFFS for file system operations. For setup, refer to:
+// https://github.com/me-no-dev/arduino-esp32fs-plugin/releases/
+// https://randomnerdtutorials.com/install-esp32-filesystem-uploader-arduino-ide/
+//
+// Icon from: https://icons8.com/icons/set/favicon
+// Based on code by mo thunderz, updated last on 11.09.2022.
+// https://github.com/mo-thunderz/Esp32WifiPart4
+// ---------------------------------------------------------------------------------------
+
 // ==============================
 class ParameterManager
 {
@@ -18,9 +30,9 @@ public:
         String name;
         int value;
 
-        Parameter(ParameterManager* parent, const String& name, int value) : 
+        Parameter(ParameterManager* parent, const String& name, int default_value) : 
         name(name), 
-        value(value) {
+        value(default_value) {
             parent->register_parameter(this);
         }
 
