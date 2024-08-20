@@ -136,8 +136,6 @@ public:
         const String type = static_cast<const char *>(doc["type"]);
         const int value = doc["value"];
 
-        Serial.printf("Command: %s\nValue: %d\n", type.c_str(), value);
-
         for (auto param : parameters)
         {
             if (type == param->name)
