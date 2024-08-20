@@ -70,22 +70,22 @@ public:
     void begin()
     {
         AsyncWebServer::begin();
-        Serial.printf("HTTP server started here: http://%s\n", WiFi.localIP().toString().c_str());
+        Serial.printf("Find server here: http://%s\n", WiFi.localIP().toString().c_str());
     }
 
-    void setup(const char *name)
+    bool setup(const char *name)
     {
+        Serial.println("Setting up managed_server");
+        
         initFS();
         if (!initWiFi()) // start basic captive wifi manager if not connected
         {
-            Serial.println("Setting AP (Access Point)");
+            Serial.println("Starting Access Point");
 
             WiFi.softAP("AP: " + String(name));
 
             dnsServer.start(53, "*", WiFi.softAPIP());
-
-            IPAddress IP = WiFi.softAPIP();
-            Serial.printf("AP IP address: %s\n", IP.toString().c_str());
+            Serial.printf("with IP address: %s\n", WiFi.softAPIP().toString().c_str());
 
             AsyncWebServer::serveStatic("/", SPIFFS, "/");
             AsyncWebServer::addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER); // only when requested from AP
@@ -125,10 +125,12 @@ public:
             _soft_AP_active = false;
         }
 
-        if (!MDNS.begin(name))
+        if (!MDNS.begin("motion"))
             Serial.println("Error setting up mDNS responder!");
         else
-            Serial.println("mDNS responder started");
+            Serial.printf("mDNS responder started: http://%s.local\n", name);
+
+        return (!_soft_AP_active);
     }
 
     void loop()
