@@ -44,6 +44,21 @@ public:
             Serial.println("Sent JSON: " + jsonString); // Debug output
         }
     }
+    // TODO why "type" and not "name" ?
+    // Sends a JSON object to all connected WebSocket clients
+    void sendJson(const ParameterManager::Parameter* pParam)
+    {
+        if (webSocket.connectedClients() > 0)
+        { // Only send if there are connected clients
+            StaticJsonDocument<200> doc;
+            doc["type"] = pParam->name;
+            doc["value"] = pParam->value;
+            String jsonString;
+            serializeJson(doc, jsonString);
+            webSocket.broadcastTXT(jsonString);
+            Serial.println("Sent JSON: " + jsonString); // Debug output
+        }
+    }
 
     // Sends a JSON object to all connected WebSocket clients
     void sendJson(const String &type, const String &value)
@@ -79,6 +94,12 @@ public:
             serializeJson(doc, jsonString);
             webSocket.broadcastTXT(jsonString);
         }
+    }
+
+    void sendAllParameters()
+    {
+        for (auto param : data.parameters)
+            sendJson(*param);
     }
 
     bool parse(StaticJsonDocument<200> *pDoc, ParameterManager::Parameter *parameter)
