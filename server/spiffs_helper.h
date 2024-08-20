@@ -18,7 +18,6 @@ void initFS()
 
 String readFile(const char *path)
 {
-  Serial.printf("Reading file: %s\r\n", path);
 
   File file = SPIFFS.open(path);
   if (!file || file.isDirectory())
@@ -33,7 +32,7 @@ String readFile(const char *path)
     fileContent = file.readStringUntil('\n');
     break;
   }
-  Serial.printf("- read from file: %s\r\n", fileContent.c_str());
+  Serial.printf("Reading file: %s\r - contents: '%s'\r\n", path, fileContent.c_str());
   return fileContent;
 }
 
