@@ -7,6 +7,7 @@
 
 #define PARAMETER_FILE_NAME "/parameter.json"
 
+
 // ==============================
 class ParameterManager
 {
@@ -129,13 +130,64 @@ public:
         if (_wasUpdated)
         {
             _wasUpdated = false;
+            save();
             return true;
         }
         return false;
     }
 
-    void didUpdate() { _wasUpdated = true; }
+
+    bool parseAll(uint8_t *payload)
+    {
+        StaticJsonDocument<200> doc;
+        DeserializationError error = deserializeJson(doc, payload);
+        if (error)
+        {
+            Serial.print(F("deserializeJson() failed: "));
+            Serial.println(error.f_str());
+            return false;
+        }
+
+        const String type = static_cast<const char *>(doc["type"]);
+        const int value = doc["value"];
+
+        Serial.printf("Command: %s\nValue: %d\n", type.c_str(), value);
+
+        for (auto param : parameters)
+        {
+            if (type == param->name)
+            {
+                if (param->value != value)
+                {
+                    param->value = value;
+                    _wasUpdated = true;
+                    mark_parameter_changed(param);
+                    Serial.printf("Updated %s to %d\n", type.c_str(), value);
+                }
+            }
+        }
+        return _wasUpdated;
+    }
 
 private:
     bool _wasUpdated = false;
+
+public:
+    std::vector<Parameter *> _changedParameters;
+    void mark_parameter_changed(Parameter *param)
+    {
+        if (std::find(_changedParameters.begin(), _changedParameters.end(), param) == _changedParameters.end()) {
+            _changedParameters.push_back(param);
+        }
+    }
+
+    std::vector<Parameter *> getChangedParameters()
+    {
+        std::vector<Parameter *> changedParameters = _changedParameters;
+        _changedParameters.clear();
+        return changedParameters;
+    }
 };
+
+
+using ParameterList = std::vector<ParameterManager::Parameter *>;

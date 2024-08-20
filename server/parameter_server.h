@@ -80,7 +80,23 @@ public:
             webSocket.broadcastTXT(jsonString);
         }
     }
-    
+
+    bool parse(StaticJsonDocument<200> *pDoc, ParameterManager::Parameter *parameter)
+    {
+        const String type = static_cast<const char *>((*pDoc)["type"]);
+        const int value = (*pDoc)["value"];
+
+        if (type == parameter->name)
+        {
+            parameter->value = int(value);
+            data.save();
+            sendJson(parameter->name, String(value));
+            return true;
+        }
+        return false;
+    }
+
+
 public:
     ParameterManager data;
 };
