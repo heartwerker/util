@@ -5,8 +5,10 @@
 #include "server/spiffs_helper.h"
 #include <vector>
 
+#define PARAMETER_FILE_NAME "/parameter.json"
+
 // ==============================
-class Config
+class ParameterManager
 {
 public:
     
@@ -15,7 +17,7 @@ public:
         String name;
         int value;
 
-        Parameter(Config* parent, const String& name, int value) : 
+        Parameter(ParameterManager* parent, const String& name, int value) : 
         name(name), 
         value(value) {
             parent->register_parameter(this);
@@ -60,12 +62,12 @@ public:
 
     bool save() const
     {
-        Serial.println("config.save() !!! ");
+        Serial.println("ParameterManager::save() !!! ");
 
-        File configFile = SPIFFS.open("/config.json", "w");
-        if (!configFile)
+        File parameterFile = SPIFFS.open(PARAMETER_FILE_NAME, "w");
+        if (!parameterFile)
         {
-            Serial.println("Failed to open config file for writing");
+            Serial.println("Failed to open parameter file for writing");
             return false;
         }
         DynamicJsonDocument doc(1024);
@@ -73,14 +75,14 @@ public:
         for (auto param : parameters)
             doc[param->name] = param->value;
 
-        if (serializeJson(doc, configFile) == 0)
+        if (serializeJson(doc, parameterFile) == 0)
         {
-            Serial.println("Failed to write config file");
-            configFile.close();
+            Serial.println("Failed to write file");
+            parameterFile.close();
             return false;
         }
 
-        configFile.close();
+        parameterFile.close();
         return true;
     }
 
@@ -88,31 +90,31 @@ public:
     {
         initFS();
         
-        Serial.println("config.load() !!! ");
-        File configFile = SPIFFS.open("/config.json", "r");
-        if (!configFile)
+        Serial.println("ParameterManager::load() !!! ");
+        File parameterFile = SPIFFS.open(PARAMETER_FILE_NAME, "r");
+        if (!parameterFile)
         {
-            Serial.println("Failed to open config file");
+            Serial.println("Failed to open file");
             return false;
         }
 
-        size_t size = configFile.size();
+        size_t size = parameterFile.size();
         if (size > 1024)
         {
-            Serial.println("Config file size is too large");
-            configFile.close();
+            Serial.println("file size is too large");
+            parameterFile.close();
             return false;
         }
 
         std::unique_ptr<char[]> buf(new char[size]);
-        configFile.readBytes(buf.get(), size);
-        configFile.close();
+        parameterFile.readBytes(buf.get(), size);
+        parameterFile.close();
 
         DynamicJsonDocument doc(1024);
         auto error = deserializeJson(doc, buf.get());
         if (error)
         {
-            Serial.println("Failed to parse config file");
+            Serial.println("Failed to parse file");
             return false;
         }
 

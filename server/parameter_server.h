@@ -1,7 +1,7 @@
 #pragma once
 
 #include "socket_server.h"
-#include "config_user.h"
+#include "parameter_manager.h"
 
 class ParameterServer : public SocketServer
 {
@@ -12,10 +12,10 @@ public:
 
     bool setup(const char *name, Websocket_Callback callback)
     {
-        config.load();
+        data.load();
 
-        Serial.printf("Loaded user config.parameters: (%d) \n", config.parameters.size());
-        for (auto param : config.parameters)
+        Serial.printf("Loaded user data.parameters: (%d) \n", data.parameters.size());
+        for (auto param : data.parameters)
             Serial.printf("%s: %d\n", param->name.c_str(), param->value);
         
         Serial.println("Setting up ParameterServer");
@@ -31,7 +31,7 @@ public:
 
     // TODO why "type" and not "name" ?
     // Sends a JSON object to all connected WebSocket clients
-    void sendJson(const Config::Parameter &param)
+    void sendJson(const ParameterManager::Parameter &param)
     {
         if (webSocket.connectedClients() > 0)
         { // Only send if there are connected clients
@@ -82,7 +82,7 @@ public:
     }
     
 public:
-    Config config;
+    ParameterManager data;
 };
 
 
