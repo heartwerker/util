@@ -9,7 +9,7 @@ using namespace util;
 
 #include "../esp32_pwm.h"
 
-// #define PWM_FRQUENCY 20000
+#define PWM_FRQUENCY 150
 // #define PWM_RANGE 1024
 
 struct BTS7960_Driver
@@ -32,7 +32,7 @@ public:
 
         ESP32_PWM::add(_pins.LPWM);
         ESP32_PWM::add(_pins.RPWM);
-        ESP32_PWM::init(20000);
+        ESP32_PWM::init(PWM_FRQUENCY);
 
         pinMode(_pins.ENABLE, OUTPUT);
         digitalWrite(_pins.ENABLE, HIGH);
@@ -43,27 +43,39 @@ public:
 
     void loop()
     {
-#define filter_val 0.001
-        simpleFilterf(_current_L, float(analogRead(_pins.L_IS)) / 4095.0, filter_val);
-        simpleFilterf(_current_R, float(analogRead(_pins.R_IS)) / 4095.0, filter_val);
-
-        _current = _current_L - _current_R;
-
-        if (since_loop >= 5)
+        if (_since_loop >= 5)
         {
-            since_loop = 0;
+            _since_loop = 0;
             applySpeed();
 #if 0
-            printf("Current L:\t%2.2f\tCurrent R:\t%2.2f\n", _current_L, _current_R);
-#endif
-#if 0
-            if (since_reverse > 5000)
+            if (_since_reverse > 5000)
             {
-                since_reverse = 0;
+                _since_reverse = 0;
                 setSpeed(-_target);
             }
 #endif
         }
+        if (_since_us_current >= 100)
+        {
+            _since_us_current = 0;
+#define filter_val 0.0002
+            // simpleFilterf(_current_L, float(analogRead(_pins.L_IS)) / 4095.0, filter_val);
+            // simpleFilterf(_current_R, float(analogRead(_pins.R_IS)) / 4095.0, filter_val);
+            simpleFilterf(_current_L, float(analogRead(_pins.L_IS)) / 2048.0, filter_val);
+            simpleFilterf(_current_R, float(analogRead(_pins.R_IS)) / 2048.0, filter_val);
+
+            float new_current = _current_L +_current_R;
+            simpleFilterf(_current_dif, (new_current - _current), 0.002);
+            _current = new_current;
+
+        }
+#if 1
+        if (_since_current_print >= 80)
+        {
+            _since_current_print = 0;
+            printf("Current \t%2.4f \tdif: %2.4f \t\t L/R:\t%2.4f\t%2.4f\n", _current, _current_dif, _current_L, _current_R);
+        }
+#endif
     }
 
     void setSpeed(float percentage)
@@ -92,12 +104,12 @@ public:
         ESP32_PWM::set(_pins.LPWM, pwm1);
         ESP32_PWM::set(_pins.RPWM, pwm2);
 
-        if (since_update > 1000)
+        if (_since_update > 1000)
         {
             if (_target == 0)
-                since_update = 800;
+                _since_update = 800;
             else
-                since_update = 0;
+                _since_update = 0;
 #if 0
             Serial.printf("_target: \t%2.2f _actual: \t%2.2f -> pwm1: \t%2.2f  pwm2: \t%2.2f   \n", _target, _actual, pwm1, pwm2);
 #endif
@@ -107,7 +119,7 @@ public:
 public:
     int dir = 1;
     int index = 0;
-    elapsedMillis since_update = 0;
+    elapsedMillis _since_update = 0;
 
     bool invert_dir = true;
 
@@ -117,11 +129,12 @@ public:
     float _current = 0;
     float _current_dif = 0;
 
-
 private:
-    elapsedMillis since_loop = 0;
-    elapsedMillis since_count = 0;
-    elapsedMillis since_reverse = 0;
+    elapsedMicros _since_us_current = 0;
+    elapsedMillis _since_current_print = 0;
+    elapsedMillis _since_loop = 0;
+    elapsedMillis _since_count = 0;
+    elapsedMillis _since_reverse = 0;
 
     float _target = 0; // _target_speed
     float _actual = 0; // _actual_speed
