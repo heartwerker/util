@@ -12,10 +12,14 @@ public:
     bool setup(const char *name, Websocket_Callback callback)
     {
         Serial.println("ParameterServer::setup()");
-        data.load();
+        if (pData == nullptr)
+            Serial.println("ParameterServer::PROBLEMMMMMMMMM()");
+        
+        
+        pData->load();
 
-        Serial.printf("Loaded user data.parameters: (%d) \n", data.parameters.size());
-        for (auto param : data.parameters)
+        Serial.printf("Loaded user pData->parameters: (%d) \n", pData->parameters.size());
+        for (auto param : pData->parameters)
             Serial.printf("%s: %d\n", param->name.c_str(), param->value);
         
         SocketServer::setup(name, callback);
@@ -97,7 +101,7 @@ public:
 
     void sendAllParameters()
     {
-        for (auto param : data.parameters)
+        for (auto param : pData->parameters)
             sendJson(*param);
     }
 
@@ -109,7 +113,7 @@ public:
         if (type == parameter->name)
         {
             parameter->value = int(value);
-            data.save();
+            pData->save();
             sendJson(parameter->name, String(value));
             return true;
         }
@@ -118,7 +122,7 @@ public:
 
 
 public:
-    ParameterManager data;
+    ParameterManager *pData = nullptr;
 };
 
 
