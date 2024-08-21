@@ -44,7 +44,9 @@ public:
             String jsonString;
             serializeJson(doc, jsonString);
             webSocket.broadcastTXT(jsonString);
+#if DEBUG_SERVER
             Serial.println("Sent JSON: " + jsonString); // Debug output
+#endif
         }
     }
     // TODO why "type" and not "name" ?
@@ -59,7 +61,9 @@ public:
             String jsonString;
             serializeJson(doc, jsonString);
             webSocket.broadcastTXT(jsonString);
+#if DEBUG_SERVER
             Serial.println("Sent JSON: " + jsonString); // Debug output
+#endif
         }
     }
 
@@ -74,7 +78,9 @@ public:
             String jsonString;
             serializeJson(doc, jsonString);
             webSocket.broadcastTXT(jsonString);
+#if DEBUG_SERVER
             Serial.println("Sent JSON: " + jsonString); // Debug output
+#endif
         }
     }
 

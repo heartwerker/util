@@ -7,6 +7,7 @@
 #include "minimal_wifimanager.h"
 #include "spiffs_helper.h"
 
+#define DEBUG_SERVER 0
 
 class CaptiveRequestHandler : public AsyncWebHandler
 {
@@ -41,7 +42,9 @@ public:
                 {
                     String filePath = "/" + p->name() + ".txt";
                     writeFile(filePath.c_str(), p->value().c_str());
+#if DEBUG_SERVER
                     Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+#endif
                 }
             }
             request->send(200, "text/plain", "Done, will restart! connect to your wifi! ");
@@ -76,7 +79,7 @@ public:
     bool setup(const char *name)
     {
         Serial.println("ManagedServer::setup()");
-        
+
         initFS();
         if (!initWiFi()) // start basic captive wifi manager if not connected
         {
@@ -101,14 +104,18 @@ public:
                 for (int i = 0; i < request->params(); i++)
                 {
                     const AsyncWebParameter *p = request->getParam(i);
+#if DEBUG_SERVER
                     Serial.printf("%s set to: %s\n", p->name().c_str(), p->value().c_str());
-                    
+#endif
+
                     if (p->isPost())
                     {
                         // use param name for fs path
                         String filePath = "/" + p->name() + ".txt";
                         writeFile(filePath.c_str(), p->value().c_str());
+#if DEBUG_SERVER
                         Serial.printf("%s set to: %s\n", p->name().c_str(), p->value().c_str());
+#endif
 
                         // Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
                     }
@@ -124,7 +131,6 @@ public:
         {
             _soft_AP_active = false;
         }
-
 
         return (!_soft_AP_active);
     }

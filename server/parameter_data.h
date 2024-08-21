@@ -7,6 +7,8 @@
 
 #define PARAMETER_FILE_NAME "/parameter.json"
 
+#define DEBUG_DATA 0
+
 
 // ---------------------------------------------------------------------------------------
 // Server utilizes WiFi, WebSockets, and JSON for configuration and control.
@@ -48,7 +50,9 @@ public:
 
     bool save() const
     {
+#if DEBUG_DATA
         Serial.println("ParameterData::save() !!! ");
+#endif
 
         File parameterFile = SPIFFS.open(PARAMETER_FILE_NAME, "w");
         if (!parameterFile)
@@ -75,8 +79,9 @@ public:
     bool load()
     {
         initFS();
-        
+#if DEBUG_DATA
         Serial.println("ParameterData::load() !!! ");
+#endif
         File parameterFile = SPIFFS.open(PARAMETER_FILE_NAME, "r");
         if (!parameterFile)
         {
@@ -145,7 +150,9 @@ public:
                     param->value = value;
                     _wasUpdated = true;
                     mark_parameter_changed(param);
+#if DEBUG_DATA
                     Serial.printf("Updated %s to %d\n", type.c_str(), value);
+#endif
                 }
             }
         }

@@ -55,25 +55,26 @@ public:
             }
 #endif
         }
-        if (_since_us_current >= 100)
+        if (_since_us_current >= 50)
         {
             _since_us_current = 0;
-#define filter_val 0.0002
+#define filter_val 0.0001
             // simpleFilterf(_current_L, float(analogRead(_pins.L_IS)) / 4095.0, filter_val);
             // simpleFilterf(_current_R, float(analogRead(_pins.R_IS)) / 4095.0, filter_val);
             simpleFilterf(_current_L, float(analogRead(_pins.L_IS)) / 2048.0, filter_val);
             simpleFilterf(_current_R, float(analogRead(_pins.R_IS)) / 2048.0, filter_val);
 
             float new_current = _current_L +_current_R;
-            simpleFilterf(_current_dif, (new_current - _current), 0.002);
+            simpleFilterf(_current_dif, (new_current - _current) * 1000, 0.001);
             _current = new_current;
 
         }
 #if 1
-        if (_since_current_print >= 80)
+        if (_since_current_print >= 50)
         {
             _since_current_print = 0;
-            printf("Current \t%2.4f \tdif: %2.4f \t\t L/R:\t%2.4f\t%2.4f\n", _current, _current_dif, _current_L, _current_R);
+            // printf("Current \t%2.4f \tdif: %2.4f \t\t L/R:\t%2.4f\t%2.4f\n", _current, _current_dif, _current_L, _current_R);
+            printf("%2.4f, %2.4f\n", _current, _current_dif); //, _current_L, _current_R);
         }
 #endif
     }
