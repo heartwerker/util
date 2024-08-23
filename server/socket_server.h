@@ -17,7 +17,7 @@ public:
     {
         Serial.println("SocketServer::setup()");
 
-        if (ManagedServer::setup(name))
+        if (ManagedServer::setup(name) || 1)
         {
             ManagedServer::serveStatic("/", SPIFFS, "/");
             ManagedServer::on("/", HTTP_GET, [](AsyncWebServerRequest *request)
@@ -31,7 +31,7 @@ public:
             // ManagedServer::begin(); // start server after the websocket
         }
         else {
-            Serial.println("SocketServer::setup failed()");
+            Serial.println("ManagedServer::setup failed()");
         }
         return true;
     }
