@@ -7,7 +7,7 @@
 
 #define PARAMETER_FILE_NAME "/parameter.json"
 
-#define DEBUG_DATA 0
+#define DEBUG_DATA 1
 
 
 // ---------------------------------------------------------------------------------------

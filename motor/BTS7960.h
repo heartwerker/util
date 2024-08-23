@@ -69,7 +69,7 @@ public:
             _current = new_current;
 
         }
-#if 1
+#if 0
         if (_since_current_print >= 50)
         {
             _since_current_print = 0;

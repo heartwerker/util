@@ -7,7 +7,7 @@
 #include "minimal_wifimanager.h"
 #include "spiffs_helper.h"
 
-#define DEBUG_SERVER 0
+#define DEBUG_SERVER 1
 
 class CaptiveRequestHandler : public AsyncWebHandler
 {
