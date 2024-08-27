@@ -1,6 +1,8 @@
 #pragma once
 #include <Arduino.h>
+#include <elapsedMillis.h>
 
+using lpsd_ms = elapsedMillis;
 using time_ms = uint32_t;
 
 namespace util {
