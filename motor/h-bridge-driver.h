@@ -41,7 +41,7 @@
 #include "../basics.h"
 
 #define PWM_FREQUENCY 8000
-#define PWM_RANGE 1024
+#define PWM_RANGE 256
 
 class H_Bridge_Driver : public MotorDriverBase
 {
@@ -62,30 +62,16 @@ public:
 #endif
     }
 
-    void begin()
+    void begin() // legacy
     {
         setup();
     }
 
-    void computeSpeed()
-    {
-        if (since_count > 1000)
-        {
-            // compute speed as counts / since_count and print result
-            speed += ((float(counter_speed_pulse) / float(since_count)) - speed) * 0.2f;
-            since_count = 0;
-            counter_speed_pulse = 0;
-
-            // Serial.printf("speed: %f\n", speed);
-        }
-    }
-
     void loop()
     {
-        if (since_loop > 5)
+        if (since_loop > 1)
         {
             since_loop = 0;
-            computeSpeed();
             applySpeed();
 
 #if 0
@@ -100,25 +86,25 @@ public:
 
     void setSpeed(float percentage)
     {
-        percentage = constrain(percentage, -1.0f, 1.0f);
-        target = percentage;
+        target = constrain(percentage, -1.0f, 1.0f);
     }
 
     void applySpeed()
     {
-        current += (target - current) * 0.0201f;
+        current += (target - current) * 0.020f;
         float output = (invert_dir ? -1 : 1) * current;
 
         int pwm1, pwm2 = 0;
         if (output > 0)
         {
-            pwm1 = util::clipf(fabs(output), 0, 1) * float(PWM_RANGE - 1);
+            pwm1 = util::mapConstrainf(fabs(output), 0, 1, 0, float(PWM_RANGE - 1));
             pwm2 = 0;
         }
         else
         {
             pwm1 = 0;
-            pwm2 = util::clipf(fabs(output), 0, 1) * float(PWM_RANGE - 1);
+            // pwm2 = util::clipf(fabs(output), 0, 1) * float(PWM_RANGE - 1);
+            pwm2 = util::mapConstrainf(fabs(output), 0, 1, 0, float(PWM_RANGE - 1));
         }
 
         analogWrite(control_pin1, pwm1);
@@ -130,6 +116,9 @@ public:
             // Serial.printf("H_Bridge_Driver::target: %2.2f - speed: %2.2f -> pwm1: %d  pwm2: %4d  | ", target, current, pwm1, pwm2); Serial.println();
         }
     }
+
+    float getActual() { return current; }
+    float getTarget() { return target; }
 
 public:
     float percent = 0;
@@ -146,7 +135,7 @@ private:
     elapsedMillis since_loop = 0;
     elapsedMillis since_count = 0;
     elapsedMillis since_reverse = 0;
-    float speed = 0;
+
     float target = 0;
     float current = 0;
 
