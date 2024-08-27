@@ -35,30 +35,36 @@
 
 #pragma once
 #include <Arduino.h>
+#include "motor-driver-base.h"
 #include <elapsedMillis.h>
 
 #include "../basics.h"
 
-#define PWM_FRQUENCY 8000
+#define PWM_FREQUENCY 8000
 #define PWM_RANGE 1024
 
-class H_Bridge_Driver
+class H_Bridge_Driver : public MotorDriverBase
 {
 public:
-    H_Bridge_Driver(uint8_t pin1, uint8_t pin2)
+    H_Bridge_Driver(uint8_t pin1, uint8_t pin2) : MotorDriverBase()
     {
         control_pin1 = pin1;
         control_pin2 = pin2;
     }
 
-    void begin()
+    void setup()
     {
         pinMode(control_pin1, OUTPUT);
         pinMode(control_pin2, OUTPUT);
 #if !ESP32
-        analogWriteFreq(PWM_FRQUENCY);
+        analogWriteFreq(PWM_FREQUENCY);
         analogWriteRange(PWM_RANGE);
 #endif
+    }
+
+    void begin()
+    {
+        setup();
     }
 
     void computeSpeed()

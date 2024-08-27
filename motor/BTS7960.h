@@ -2,6 +2,8 @@
 #if ESP32
 
 #include <Arduino.h>
+#include "motor-driver-base.h"
+
 #include <elapsedMillis.h>
 
 #include "../util.h"
@@ -9,14 +11,14 @@ using namespace util;
 
 #include "../esp32_pwm.h"
 
-#define PWM_FRQUENCY 150
+#define PWM_FREQUENCY 150
 // #define PWM_RANGE 1024
 
-struct BTS7960_Driver
+struct BTS7960_Driver : public MotorDriverBase
 {
 
 public:
-    BTS7960_Driver(uint8_t ENABLE, uint8_t LPWM, uint8_t RPWM, uint8_t L_IS, uint8_t R_IS)
+    BTS7960_Driver(uint8_t ENABLE, uint8_t LPWM, uint8_t RPWM, uint8_t L_IS, uint8_t R_IS) : MotorDriverBase()
     {
         _pins.ENABLE = ENABLE;
         _pins.LPWM = LPWM;
@@ -32,7 +34,7 @@ public:
 
         ESP32_PWM::add(_pins.LPWM);
         ESP32_PWM::add(_pins.RPWM);
-        ESP32_PWM::init(PWM_FRQUENCY);
+        ESP32_PWM::init(PWM_FREQUENCY);
 
         pinMode(_pins.ENABLE, OUTPUT);
         digitalWrite(_pins.ENABLE, HIGH);
