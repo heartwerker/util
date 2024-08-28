@@ -56,6 +56,9 @@ public:
     {
         pinMode(control_pin1, OUTPUT);
         pinMode(control_pin2, OUTPUT);
+
+        analogWrite(control_pin1, 0);
+        analogWrite(control_pin2, 0);
 #if !ESP32
         analogWriteFreq(PWM_FREQUENCY);
         analogWriteRange(PWM_RANGE);

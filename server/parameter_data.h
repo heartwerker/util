@@ -7,7 +7,7 @@
 
 #define PARAMETER_FILE_NAME "/parameter.json"
 
-#define DEBUG_DATA 0
+#define DEBUG_DATA 1
 
 // ---------------------------------------------------------------------------------------
 // Server utilizes WiFi, WebSockets, and JSON for configuration and control.
@@ -159,9 +159,6 @@ public:
                     param->value = value;
                     _wasUpdated = true;
                     mark_parameter_changed_from_server(param);
-#if DEBUG_DATA
-                    Serial.printf("Updated %s to %d\n", type.c_str(), value);
-#endif
                 }
             }
         }
