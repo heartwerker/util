@@ -89,6 +89,7 @@ public:
 
     void setSpeed(float percentage)
     {
+        // printf("H_Bridge_Driver::setSpeed: %2.2f\n", percentage);
         target = constrain(percentage, -1.0f, 1.0f);
     }
 
