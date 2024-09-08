@@ -4,6 +4,8 @@
 
 using lpsd_ms = elapsedMillis;
 using time_ms = uint32_t;
+using time_s = uint32_t;
+using time_min = uint32_t;
 
 namespace util
 {

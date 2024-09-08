@@ -121,6 +121,7 @@ public:
         if (type == parameter->name)
         {
             parameter->value = int(value);
+            //TODO dont save so often when parameter parsed ?!?
             pData->save();
             sendJson(parameter->name, String(value));
             return true;
