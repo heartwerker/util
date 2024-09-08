@@ -1,7 +1,11 @@
 #pragma once
 
+#define ENABLE_DNS_SERVER 0 // for use in access point ?!
+
 #include <ESPAsyncWebServer.h>
+#if ENABLE_DNS_SERVER
 #include <DNSServer.h>
+#endif
 #include <ESPmDNS.h> // for name.local resolution
 
 #include "minimal_wifimanager.h"
@@ -87,7 +91,9 @@ public:
 
             WiFi.softAP("AP: " + String(name));
 
+#if ENABLE_DNS_SERVER
             dnsServer.start(53, "*", WiFi.softAPIP());
+#endif
             Serial.printf("with IP address: %s\n", WiFi.softAPIP().toString().c_str());
 
             AsyncWebServer::serveStatic("/", SPIFFS, "/");
@@ -137,11 +143,16 @@ public:
 
     void loop()
     {
+#if ENABLE_DNS_SERVER
         if (_soft_AP_active)
             dnsServer.processNextRequest();
+#endif
     }
 
 private:
     bool _soft_AP_active = true;
+
+#if ENABLE_DNS_SERVER
     DNSServer dnsServer;
+#endif
 };
