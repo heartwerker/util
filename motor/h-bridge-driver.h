@@ -68,6 +68,11 @@ public:
 #endif
     }
 
+    void setFilterValue(float value)
+    {
+        _filterValue = value;
+    }
+
     void begin() // legacy
     {
         setup();
@@ -98,7 +103,7 @@ public:
 
     void applySpeed()
     {
-        current += (target - current) * 0.020f;
+        simpleFilterf(current, target, _filterValue);
         float output = (invert_dir ? -1 : 1) * current;
 
         int pwm1, pwm2 = 0;
@@ -145,6 +150,8 @@ private:
 
     float target = 0;
     float current = 0;
+
+    float _filterValue = 0.02f;
 
     uint8_t control_pin1;
     uint8_t control_pin2;
