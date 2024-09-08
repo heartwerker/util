@@ -40,7 +40,7 @@
 
 #include "../basics.h"
 
-#define PWM_FREQUENCY 8000
+#define PWM_FREQUENCY 20000
 #define PWM_RANGE 256
 
 class H_Bridge_Driver : public MotorDriverBase
@@ -59,6 +59,9 @@ public:
 
         analogWrite(control_pin1, 0);
         analogWrite(control_pin2, 0);
+
+        analogWriteFrequency(PWM_FREQUENCY);
+
 #if !ESP32
         analogWriteFreq(PWM_FREQUENCY);
         analogWriteRange(PWM_RANGE);
