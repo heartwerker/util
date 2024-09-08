@@ -1,8 +1,9 @@
 #pragma once
-
-#define ENABLE_DNS_SERVER 0 // for use in access point ?!
-
 #include <ESPAsyncWebServer.h>
+
+// TODO initialize dns server totally dynamically for AP use-
+#define ENABLE_DNS_SERVER 0 // for use in access point ?! 
+
 #if ENABLE_DNS_SERVER
 #include <DNSServer.h>
 #endif
@@ -92,7 +93,9 @@ public:
             WiFi.softAP("AP: " + String(name));
 
 #if ENABLE_DNS_SERVER
-            dnsServer.start(53, "*", WiFi.softAPIP());
+            // dnsServer.start(53, "*", WiFi.softAPIP());
+            pDnsServer = new DNSServer();
+            pDnsServer->start(53, "*", WiFi.softAPIP());
 #endif
             Serial.printf("with IP address: %s\n", WiFi.softAPIP().toString().c_str());
 
@@ -145,7 +148,8 @@ public:
     {
 #if ENABLE_DNS_SERVER
         if (_soft_AP_active)
-            dnsServer.processNextRequest();
+            pDnsServer->processNextRequest();
+            // dnsServer.processNextRequest();
 #endif
     }
 
@@ -153,6 +157,7 @@ private:
     bool _soft_AP_active = true;
 
 #if ENABLE_DNS_SERVER
-    DNSServer dnsServer;
+    // DNSServer dnsServer;
+    DNSServer *pDnsServer = nullptr;
 #endif
 };
