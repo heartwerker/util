@@ -144,6 +144,11 @@ public:
         return (!_soft_AP_active);
     }
 
+    String getIP()
+    {
+        return WiFi.localIP().toString();
+    }
+
     void loop()
     {
 #if ENABLE_DNS_SERVER
