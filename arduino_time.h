@@ -3,9 +3,9 @@
 #include <elapsedMillis.h>
 
 using lpsd_ms = elapsedMillis;
-using time_ms = uint32_t;
-using time_s = uint32_t;
-using time_min = uint32_t;
+using time_ms = int32_t;
+using time_s = int32_t;
+using time_min = int32_t;
 
 namespace util
 {
