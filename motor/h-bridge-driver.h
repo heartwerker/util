@@ -80,7 +80,7 @@ public:
 
     void loop()
     {
-        if (since_loop > 1)
+        if (since_loop > 2)
         {
             since_loop = 0;
             applySpeed();

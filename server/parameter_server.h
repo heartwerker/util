@@ -29,8 +29,15 @@ public:
     void loop()
     {
         SocketServer::loop();
+
+#if 1
+        static lpsd_ms timeElapsed;
+        if (timeElapsed > 5)
+        {
         for (auto param : pData->getParameter_changed_from_code())
             sendJson(param);
+        }
+#endif
     }
 
     // void sendJson(const ParameterData::Parameter &param) { sendJson(&param); }

@@ -2,7 +2,7 @@
 #include <ESPAsyncWebServer.h>
 
 // TODO initialize dns server totally dynamically for AP use-
-#define ENABLE_DNS_SERVER 0 // for use in access point ?! 
+#define ENABLE_DNS_SERVER 1 // for use in access point ?! 
 
 #if ENABLE_DNS_SERVER
 #include <DNSServer.h>
@@ -11,6 +11,8 @@
 
 #include "minimal_wifimanager.h"
 #include "spiffs_helper.h"
+
+#define USE_WIFIMANAGER_ON_ROOT 0
 
 #define DEBUG_SERVER 1
 
@@ -34,8 +36,14 @@ public:
 #if 1
         if (request->method() == HTTP_GET)
         {
-            // Serial.println("captive handled GET request");
+Serial.println("captive handled GET request");
+#if 0
+#if USE_WIFIMANAGER_ON_ROOT
             request->send(SPIFFS, "/wifimanager.html", "text/html");
+#else
+            request->send(SPIFFS, "/index.html", "text/html");
+#endif
+#endif
         }
         else if (request->method() == HTTP_POST)
         {
@@ -101,10 +109,16 @@ public:
 
             AsyncWebServer::serveStatic("/", SPIFFS, "/");
             AsyncWebServer::addHandler(new CaptiveRequestHandler()).setFilter(ON_AP_FILTER); // only when requested from AP
-#if 0
+
+#if 1
+#if USE_WIFIMANAGER_ON_ROOT
             // Web Server Root URL
             AsyncWebServer::on("/", HTTP_GET, [](AsyncWebServerRequest *request)
                                { request->send(SPIFFS, "/wifimanager.html", "text/html"); });
+#else
+            AsyncWebServer::on("/", HTTP_GET, [](AsyncWebServerRequest *request)
+                               { request->send(SPIFFS, "/index.html", "text/html"); });
+#endif
 #endif
 #if 1
             AsyncWebServer::on("/", HTTP_POST, [](AsyncWebServerRequest *request)
@@ -152,9 +166,14 @@ public:
     void loop()
     {
 #if ENABLE_DNS_SERVER
-        if (_soft_AP_active)
-            pDnsServer->processNextRequest();
-            // dnsServer.processNextRequest();
+        static lpsd_ms timeElapsed;
+        if (timeElapsed > 2)
+        {
+            timeElapsed = 0;
+            if (_soft_AP_active)
+                pDnsServer->processNextRequest();
+                // dnsServer.processNextRequest();
+        }
 #endif
     }
 
