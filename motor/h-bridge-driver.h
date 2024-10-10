@@ -60,11 +60,11 @@ public:
         analogWrite(control_pin1, 0);
         analogWrite(control_pin2, 0);
 
-        analogWriteFrequency(PWM_FREQUENCY);
-
 #if !ESP32
         analogWriteFreq(PWM_FREQUENCY);
         analogWriteRange(PWM_RANGE);
+#else
+        analogWriteFrequency(PWM_FREQUENCY);
 #endif
     }
 
