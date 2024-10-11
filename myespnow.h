@@ -110,11 +110,13 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], 
     for (int i = 0; i < num_targets; i++)
         _targets[i] = target_addresses[i];
 
+    // https://www.electrosoftcloud.com/en/esp32-wifi-and-esp-now-simultaneously/ ?!?!
+
 #if 0 // todo is this necessary ?
     // Set device as a Wi-Fi Station
-    WiFi.mode(WIFI_AP_STA);
+    WiFi.mode(WIFI_AP_STA); // this was said to be the easy way to kinda have wifi +espnow work.
     // WiFi.mode(WIFI_STA);
-    // WiFi.disconnect();
+    WiFi.disconnect();
 #else // old working esp8266 espnow_protocol.h
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
