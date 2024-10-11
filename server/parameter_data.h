@@ -9,8 +9,12 @@
 
 #define DEBUG_DATA 1
 
+// TODO:
+// parameter_data should be totaly independant of server!!!
+
+
 // ---------------------------------------------------------------------------------------
-// Server utilizes WiFi, WebSockets, and JSON for configuration and control.
+// used by Server which utilizes WiFi, WebSockets, and JSON for configuration and control.
 //
 // Requires SPIFFS for file system operations. For setup, refer to:
 // https://github.com/me-no-dev/arduino-esp32fs-plugin/releases/
@@ -121,6 +125,12 @@ public:
 
         for (auto param : parameters)
             param->value = doc[param->name];
+
+#if DEBUG_DATA
+        Serial.printf("Loaded user data: (%d) \n", parameters.size());
+        for (auto param : parameters)
+            Serial.printf("%s: %d\n", param->name.c_str(), param->value);
+#endif
 
         return true;
     }

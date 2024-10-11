@@ -17,10 +17,6 @@ public:
         
         pData->load();
 
-        Serial.printf("Loaded user pData->parameters: (%d) \n", pData->parameters.size());
-        for (auto param : pData->parameters)
-            Serial.printf("%s: %d\n", param->name.c_str(), param->value);
-        
         SocketServer::setup(name, callback);
 
         return true;
