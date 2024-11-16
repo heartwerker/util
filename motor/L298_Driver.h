@@ -10,7 +10,7 @@
 class L298_Driver : public H_Bridge_Driver
 {
 public:
-    L298_Driver(uint8_t pin1, uint8_t pin2) : H_Bridge_Driver(pin1, pin2)
+    L298_Driver(uint8_t IN1, uint8_t IN2) : H_Bridge_Driver(IN1, IN2)
     {
     }
 

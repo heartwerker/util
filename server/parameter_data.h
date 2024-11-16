@@ -7,11 +7,14 @@
 
 #define PARAMETER_FILE_NAME "/parameter.json"
 
-#define DEBUG_DATA 0
+#define DEBUG_DATA 1
+
+// TODO:
+// parameter_data should be totaly independant of server!!!
 
 
 // ---------------------------------------------------------------------------------------
-// Server utilizes WiFi, WebSockets, and JSON for configuration and control.
+// used by Server which utilizes WiFi, WebSockets, and JSON for configuration and control.
 //
 // Requires SPIFFS for file system operations. For setup, refer to:
 // https://github.com/me-no-dev/arduino-esp32fs-plugin/releases/
@@ -26,26 +29,37 @@
 class ParameterData
 {
 public:
-    
     struct Parameter
     {
         String name;
         int value;
+        ParameterData *_parent;
 
-        Parameter(ParameterData* parent, const String& name, int default_value) : 
-        name(name), 
-        value(default_value) {
-            parent->register_parameter(this);
+        Parameter(ParameterData *parent, const String &name, int default_value) : _parent(parent),
+                                                                                  name(name),
+                                                                                  value(default_value)
+        {
+            _parent->register_parameter(this);
         }
 
-        Parameter& operator=(int v){
+        Parameter &operator=(int v)
+        {
             value = v;
+            _parent->mark_parameter_changed_from_code(this);
             return *this;
         }
         operator int() const { return value; }
+
+        float mapConstrainf(float fromLow, float fromHigh, float toLow, float toHigh)
+        {
+            return util::mapConstrainf(float(value), fromLow, fromHigh, toLow, toHigh);
+        }
     };
 
-    std::vector<Parameter*> parameters;
+    // TODO really define this twice ?!
+    using ParameterList = std::vector<ParameterData::Parameter *>;
+
+    ParameterList parameters;
     void register_parameter(Parameter *param) { parameters.push_back(param); }
 
     bool save() const
@@ -112,6 +126,12 @@ public:
         for (auto param : parameters)
             param->value = doc[param->name];
 
+#if DEBUG_DATA
+        Serial.printf("Loaded user data: (%d) \n", parameters.size());
+        for (auto param : parameters)
+            Serial.printf("%s: %d\n", param->name.c_str(), param->value);
+#endif
+
         return true;
     }
 
@@ -125,7 +145,6 @@ public:
         }
         return false;
     }
-
 
     bool parseAll(uint8_t *payload)
     {
@@ -149,10 +168,7 @@ public:
                 {
                     param->value = value;
                     _wasUpdated = true;
-                    mark_parameter_changed(param);
-#if DEBUG_DATA
-                    Serial.printf("Updated %s to %d\n", type.c_str(), value);
-#endif
+                    mark_parameter_changed_from_server(param);
                 }
             }
         }
@@ -163,21 +179,36 @@ private:
     bool _wasUpdated = false;
 
 public:
-    std::vector<Parameter *> _changedParameters;
-    void mark_parameter_changed(Parameter *param)
+    ParameterList _parameters_changed_from_server;
+    void mark_parameter_changed_from_server(Parameter *param)
     {
-        if (std::find(_changedParameters.begin(), _changedParameters.end(), param) == _changedParameters.end()) {
-            _changedParameters.push_back(param);
-        }
+        // printf("mark_parameter_changed_from_server: %s = %d \n", param->name.c_str(), param->value);
+        if (std::find(_parameters_changed_from_server.begin(), _parameters_changed_from_server.end(), param) == _parameters_changed_from_server.end())
+            _parameters_changed_from_server.push_back(param);
     }
 
-    std::vector<Parameter *> getChangedParameters()
+    ParameterList getParameter_changed_from_server()
     {
-        std::vector<Parameter *> changedParameters = _changedParameters;
-        _changedParameters.clear();
-        return changedParameters;
+        ParameterList parameter = _parameters_changed_from_server;
+        _parameters_changed_from_server.clear();
+        return parameter;
+    }
+
+public:
+    ParameterList _parameters_changed_from_code;
+    void mark_parameter_changed_from_code(Parameter *param)
+    {
+        // printf("mark_parameter_changed_from_code: %s = %d \n", param->name.c_str(), param->value);
+        if (std::find(_parameters_changed_from_code.begin(), _parameters_changed_from_code.end(), param) == _parameters_changed_from_code.end())
+            _parameters_changed_from_code.push_back(param);
+    }
+
+    ParameterList getParameter_changed_from_code()
+    {
+        ParameterList parameter = _parameters_changed_from_code;
+        _parameters_changed_from_code.clear();
+        return parameter;
     }
 };
-
 
 using ParameterList = std::vector<ParameterData::Parameter *>;

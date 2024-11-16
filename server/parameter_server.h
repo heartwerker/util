@@ -15,13 +15,8 @@ public:
         if (pData == nullptr)
             Serial.println("ParameterServer::PROBLEMMMMMMMMM()");
         
-        
         pData->load();
 
-        Serial.printf("Loaded user pData->parameters: (%d) \n", pData->parameters.size());
-        for (auto param : pData->parameters)
-            Serial.printf("%s: %d\n", param->name.c_str(), param->value);
-        
         SocketServer::setup(name, callback);
 
         return true;
@@ -30,10 +25,18 @@ public:
     void loop()
     {
         SocketServer::loop();
+
+#if 1
+        static lpsd_ms timeElapsed;
+        if (timeElapsed > 5)
+        {
+        for (auto param : pData->getParameter_changed_from_code())
+            sendJson(param);
+        }
+#endif
     }
 
-    // TODO why "type" and not "name" ?
-    // Sends a JSON object to all connected WebSocket clients
+    // void sendJson(const ParameterData::Parameter &param) { sendJson(&param); }
     void sendJson(const ParameterData::Parameter &param)
     {
         if (webSocket.connectedClients() > 0)
@@ -70,6 +73,8 @@ public:
     // Sends a JSON object to all connected WebSocket clients
     void sendJson(const String &type, const String &value)
     {
+        Serial.printf("OBSOLETE. dont use anymore!!");
+        
         if (webSocket.connectedClients() > 0)
         { // Only send if there are connected clients
             StaticJsonDocument<200> doc;
@@ -86,7 +91,7 @@ public:
 
     #define MAX_ARRAY_LENGTH 100 // Defines the maximum length for JSON arrays
     // Sends a JSON array to all connected WebSocket clients
-    void sendJsonArray(const String &type, const float arrayValues[], int length)
+    void sendJsonArray(const String &type, float * arrayValues, int length)
     {
         if (webSocket.connectedClients() > 0 && length > 0)
         { // Only send if there are connected clients and array has elements
@@ -119,6 +124,7 @@ public:
         if (type == parameter->name)
         {
             parameter->value = int(value);
+            //TODO dont save so often when parameter parsed ?!?
             pData->save();
             sendJson(parameter->name, String(value));
             return true;

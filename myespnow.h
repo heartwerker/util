@@ -10,6 +10,29 @@
 esp_now_peer_info_t peerInfo;
 #endif
 
+// ========================= Usuage =========================
+
+// run once with dummy mac address to get the MAC address of the device
+// then set:
+// uint8_t MAC_RX[6] = {0x11, 0x22, 0x33, 0x2F, 0x58, 0x6E};
+
+// #if ENABLE_ESPNOW
+// void ESPNOW_receiveBytes(uint8_t *data, uint8_t len)
+// {
+//     // memcpy(&msg_from_remote, data, len);
+//     Serial.printf("ESPNOW_receiveBytes(%d): ", len);
+// }
+// #endif
+
+// void setup()
+// {
+//   ESPNOW_Init(ESPNOW_receiveBytes, MAC_RX);
+//   [...]
+// }
+
+// later: 
+// ESPNOW_send(.....)
+
 // ========================= PROTOCOL =========================
 typedef struct message_generic
 {
@@ -36,9 +59,8 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus)
 #elif ESP32
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status)
 {
-#if 0
-    Serial.print("\rLast Packet Send:\t");
-    Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Success" : "Fail");
+#if 1
+    printf("Delivery %s", (status == ESP_NOW_SEND_SUCCESS) ? "success! \n" : "FAIL!!! \n");
 #endif
 }
 #endif
@@ -62,7 +84,7 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len)
 
 void ESPNOW_registerReceiver(unsigned char *address)
 {
-    #if ESP32
+#if ESP32
     // Register peer
     memcpy(peerInfo.peer_addr, address, 6);
     peerInfo.channel = 0;
@@ -73,11 +95,9 @@ void ESPNOW_registerReceiver(unsigned char *address)
         Serial.println("Failed to add peer");
         return;
     }
-    #elif ESP8266
+#elif ESP8266
 
-     // TODO 
-
-    #endif
+#endif
 }
 
 void ESPNOW_send_generic(uint8_t *target, int index, float value);
@@ -90,11 +110,13 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], 
     for (int i = 0; i < num_targets; i++)
         _targets[i] = target_addresses[i];
 
+    // https://www.electrosoftcloud.com/en/esp32-wifi-and-esp-now-simultaneously/ ?!?!
+
 #if 0 // todo is this necessary ?
     // Set device as a Wi-Fi Station
-    WiFi.mode(WIFI_AP_STA);
+    WiFi.mode(WIFI_AP_STA); // this was said to be the easy way to kinda have wifi +espnow work.
     // WiFi.mode(WIFI_STA);
-    // WiFi.disconnect();
+    WiFi.disconnect();
 #else // old working esp8266 espnow_protocol.h
     WiFi.mode(WIFI_STA);
     WiFi.disconnect();
@@ -120,7 +142,8 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], 
         if (_targets[t] != nullptr)
         {
 #if ESP8266
-            esp_now_add_peer(_targets[t], ESP_NOW_ROLE_COMBO, 1 + t, NULL, 0);
+            esp_now_add_peer(_targets[t], ESP_NOW_ROLE_COMBO, 1, NULL, 0);
+            // esp_now_add_peer(_targets[t], ESP_NOW_ROLE_COMBO, 1 + t, NULL, 0);
 #elif ESP32
             ESPNOW_registerReceiver(_targets[t]);
 #endif
@@ -139,15 +162,15 @@ void ESPNOW_Init(ESPNOW_RX_data_callback callback, uint8_t *target_addresses[], 
 
     if (num_targets != 0)
     {
-        
-    delay(1000);
-    for (int t = 0; t < num_targets; t++)
-        if (_targets[t] != nullptr)
-        {
-            Serial.printf("ESPNOW_Init:: sending test message to target with id: %d\n", t);
-            ESPNOW_send_generic(_targets[t], 0, 0);
-            delay(1000);
-        }
+
+        delay(1000);
+        for (int t = 0; t < num_targets; t++)
+            if (_targets[t] != nullptr)
+            {
+                Serial.printf("ESPNOW_Init:: sending test message to target with id: %d\n", t);
+                ESPNOW_send_generic(_targets[t], 0, 0);
+                delay(1000);
+            }
     }
 }
 
@@ -171,7 +194,7 @@ void ESPNOW_send_generic(uint8_t *target, int index, float value)
     msg.index = index;
     msg.value = constrain(value, -1, 1);
     esp_now_send(target, (uint8_t *)&msg, sizeof(msg));
-#if 1
+#if 0
     char macStr[18];
     snprintf(macStr, sizeof(macStr), "%02X:%02X:%02X:%02X:%02X:%02X", target[0], target[1], target[2], target[3], target[4], target[5]);
     Serial.printf("ESPNOW_send_generic(%s, %d, %f)\n", macStr, index, value);

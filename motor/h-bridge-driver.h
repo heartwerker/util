@@ -35,51 +35,54 @@
 
 #pragma once
 #include <Arduino.h>
+#include "motor-driver-base.h"
 #include <elapsedMillis.h>
 
 #include "../basics.h"
 
-#define PWM_FRQUENCY 8000
-#define PWM_RANGE 1024
+#define PWM_FREQUENCY 20000
+#define PWM_RANGE 256
 
-class H_Bridge_Driver
+class H_Bridge_Driver : public MotorDriverBase
 {
 public:
-    H_Bridge_Driver(uint8_t pin1, uint8_t pin2)
+    H_Bridge_Driver(uint8_t pin1, uint8_t pin2) : MotorDriverBase()
     {
         control_pin1 = pin1;
         control_pin2 = pin2;
     }
 
-    void begin()
+    void setup()
     {
         pinMode(control_pin1, OUTPUT);
         pinMode(control_pin2, OUTPUT);
+
+        analogWrite(control_pin1, 0);
+        analogWrite(control_pin2, 0);
+
 #if !ESP32
-        analogWriteFreq(PWM_FRQUENCY);
+        analogWriteFreq(PWM_FREQUENCY);
         analogWriteRange(PWM_RANGE);
+#else
+        analogWriteFrequency(PWM_FREQUENCY);
 #endif
     }
 
-    void computeSpeed()
+    void setFilterValue(float value)
     {
-        if (since_count > 1000)
-        {
-            // compute speed as counts / since_count and print result
-            speed += ((float(counter_speed_pulse) / float(since_count)) - speed) * 0.2f;
-            since_count = 0;
-            counter_speed_pulse = 0;
+        _filterValue = value;
+    }
 
-            // Serial.printf("speed: %f\n", speed);
-        }
+    void begin() // legacy
+    {
+        setup();
     }
 
     void loop()
     {
-        if (since_loop > 5)
+        if (since_loop > 2)
         {
             since_loop = 0;
-            computeSpeed();
             applySpeed();
 
 #if 0
@@ -94,25 +97,26 @@ public:
 
     void setSpeed(float percentage)
     {
-        percentage = constrain(percentage, -1.0f, 1.0f);
-        target = percentage;
+        // printf("H_Bridge_Driver::setSpeed: %2.2f\n", percentage);
+        target = constrain(percentage, -1.0f, 1.0f);
     }
 
     void applySpeed()
     {
-        current += (target - current) * 0.0201f;
+        simpleFilterf(current, target, _filterValue);
         float output = (invert_dir ? -1 : 1) * current;
 
         int pwm1, pwm2 = 0;
         if (output > 0)
         {
-            pwm1 = util::clipf(fabs(output), 0, 1) * float(PWM_RANGE - 1);
+            pwm1 = util::mapConstrainf(fabs(output), 0, 1, 0, float(PWM_RANGE - 1));
             pwm2 = 0;
         }
         else
         {
             pwm1 = 0;
-            pwm2 = util::clipf(fabs(output), 0, 1) * float(PWM_RANGE - 1);
+            // pwm2 = util::clipf(fabs(output), 0, 1) * float(PWM_RANGE - 1);
+            pwm2 = util::mapConstrainf(fabs(output), 0, 1, 0, float(PWM_RANGE - 1));
         }
 
         analogWrite(control_pin1, pwm1);
@@ -124,6 +128,9 @@ public:
             // Serial.printf("H_Bridge_Driver::target: %2.2f - speed: %2.2f -> pwm1: %d  pwm2: %4d  | ", target, current, pwm1, pwm2); Serial.println();
         }
     }
+
+    float getActual() { return current; }
+    float getTarget() { return target; }
 
 public:
     float percent = 0;
@@ -140,9 +147,11 @@ private:
     elapsedMillis since_loop = 0;
     elapsedMillis since_count = 0;
     elapsedMillis since_reverse = 0;
-    float speed = 0;
+
     float target = 0;
     float current = 0;
+
+    float _filterValue = 0.02f;
 
     uint8_t control_pin1;
     uint8_t control_pin2;
