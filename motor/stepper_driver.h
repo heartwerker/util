@@ -36,6 +36,16 @@ public:
         _newSetGoal = true;
     }
 
+    void setOffset(int steps_relative)
+    {
+        enableOutputs();
+        AccelStepper::move(steps_relative);
+        _turnOffAfterMove = true;
+
+        _reachedGoal = false;
+        _newSetGoal = true;
+    }
+
     void loop()
     {
         if (distanceToGo() == 0)
