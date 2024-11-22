@@ -24,6 +24,8 @@ public:
     {
         AccelStepper::setMaxSpeed(600);
         AccelStepper::setAcceleration(2000);
+
+        AccelStepper::disableOutputs();
     }
 
     void set(int steps)
