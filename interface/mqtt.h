@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include <ArduinoJson.h>
+#include <functional>
 #include "config.h"
 
 class MQTT
@@ -14,7 +15,10 @@ public:
     void setup();
     void loop();
     void sendComponent(String component_name, String value);
-    void sendLight(String component_name, int brightness);
+    void sendLight(String component_name, uint8_t brightness);
+
+    using LightChangeCallback = std::function<void(const String &name, float percent)>;
+    void setLightChangeCallback(LightChangeCallback callback);
 
     struct Component
     {
@@ -29,8 +33,9 @@ private:
 
     void reconnect();
     void publishDiscoveryMessage(Component component);
-    static void callback(char *topic, byte *payload, unsigned int length);
     void handleCallback(char *topic, byte *payload, unsigned int length);
+
+    LightChangeCallback lightChangeCallback;
 
     const String discovery_prefix = "homeassistant";
     const String device_name = DEVICE_NAME;
@@ -38,12 +43,18 @@ private:
     Component components[4] = {
         {"sensor", "rotation"},
         {"sensor", "position"},
-        {"light", "led"},
-        {"switch", "relay"}};
+        {"light", "light_rotation"},
+        {"light", "light_position"},
+        // {"switch", "relay"}
+    };
 
     String getStateTopicFromComponents(Component component) { return getBaseFromComponent(component) + "/state"; }
     String getCommandTopicFromComponents(Component component) { return getBaseFromComponent(component) + "/set"; }
     String getBaseFromComponent(Component component) { return device_name + "/" + component.type + "/" + component.name; }
+
+    void publishState(const String &topic, const DynamicJsonDocument &stateDoc);
+    void processLightCommand(const String &component_name, const DynamicJsonDocument &doc);
+    void reactToLightChange(const String &component_name, uint8_t brightness);
 };
 
 void MQTT::setup()
@@ -65,69 +76,44 @@ void MQTT::loop()
 
 void MQTT::sendComponent(String component_name, String value)
 {
-    bool componentFound = false;
-    for (int i = 0; i < sizeof(components) / sizeof(components[0]); i++)
+    for (const auto &component : components)
     {
-        if (components[i].name == component_name)
+        if (component.name == component_name)
         {
-            componentFound = true;
-            String topic = getStateTopicFromComponents(components[i]);
+            String topic = getStateTopicFromComponents(component);
 
             DynamicJsonDocument stateDoc(200);
             stateDoc["value"] = value;
 
-            String stateJson;
-            serializeJson(stateDoc, stateJson);
-
-            if (client.publish(topic.c_str(), stateJson.c_str()))
-            {
-                Serial.println("State published successfully");
-            }
-            else
-            {
-                Serial.println("Failed to publish state");
-            }
-            break;
+            publishState(topic, stateDoc);
+            return;
         }
     }
-    if (!componentFound)
-    {
-        Serial.println("Error: Component not found");
-    }
+    Serial.println("Error: Component not found");
 }
 
-void MQTT::sendLight(String component_name, int brightness)
+void MQTT::sendLight(String component_name, uint8_t brightness)
 {
-    bool componentFound = false;
-    for (int i = 0; i < sizeof(components) / sizeof(components[0]); i++)
+    for (const auto &component : components)
     {
-        if (components[i].name == component_name && components[i].type == "light")
+        if (component.name == component_name && component.type == "light")
         {
-            componentFound = true;
-            String topic = getStateTopicFromComponents(components[i]);
+            String topic = getStateTopicFromComponents(component);
 
             DynamicJsonDocument stateDoc(200);
             stateDoc["state"] = brightness > 0 ? "ON" : "OFF";
             stateDoc["brightness"] = brightness;
 
-            String stateJson;
-            serializeJson(stateDoc, stateJson);
-
-            if (client.publish(topic.c_str(), stateJson.c_str()))
-            {
-                Serial.println("State published successfully");
-            }
-            else
-            {
-                Serial.println("Failed to publish state");
-            }
-            break;
+            publishState(topic, stateDoc);
+            return;
         }
     }
-    if (!componentFound)
-    {
-        Serial.println("Error: Component not found");
-    }
+    Serial.println("Error: Component not found");
+}
+
+void MQTT::setLightChangeCallback(LightChangeCallback callback)
+{
+    lightChangeCallback = callback;
 }
 
 void MQTT::publishDiscoveryMessage(Component component)
@@ -201,55 +187,14 @@ void MQTT::handleCallback(char *topic, byte *payload, unsigned int length)
     }
 
     if (String(topic).indexOf("/light/") != -1)
-    {
-        if (doc.containsKey("state"))
+        for (const auto &component : components)
         {
-            String state = doc["state"];
-
-            Serial.print("State: ");
-            Serial.println(state);
-
-            if (state == "ON")
+            if (component.type == "light" && String(topic).indexOf(component.name) != -1)
             {
-                // sendLight("led", 255);
-            }
-            else if (state == "OFF")
-            {
-                sendLight("led", 0);
-            }
-            else
-            {
-                Serial.println("Invalid state value");
+                processLightCommand(component.name, doc);
+                return;
             }
         }
-        else
-        {
-            Serial.println("State key not found in JSON");
-        }
-
-        if (doc.containsKey("brightness"))
-        {
-            uint8_t brightness = doc["brightness"];
-
-            Serial.print("Brightness: ");
-            Serial.println(brightness);
-
-            sendLight("led", brightness);
-        }
-        else
-        {
-            Serial.println("Brightness key not found in JSON");
-        }
-    }
-
-    // for (Component component : components)
-    // {
-    //     if (component.type == "light" && String(topic) == getCommandTopicFromComponents(component))
-    //     {
-    //         Serial.print("Processing command for light: ");
-    //         Serial.println(component.name);
-    //     }
-    // }
 }
 
 void MQTT::reconnect()
@@ -261,7 +206,7 @@ void MQTT::reconnect()
         {
             Serial.println("connected");
 
-            for (Component component : components)
+            for (const auto &component : components)
             {
                 publishDiscoveryMessage(component);
                 if (component.type == "light")
@@ -278,4 +223,57 @@ void MQTT::reconnect()
             delay(5000);
         }
     }
+}
+
+void MQTT::publishState(const String &topic, const DynamicJsonDocument &stateDoc)
+{
+    String stateJson;
+    serializeJson(stateDoc, stateJson);
+
+    if (client.publish(topic.c_str(), stateJson.c_str()))
+        Serial.println("State published successfully");
+    else
+        Serial.println("Failed to publish state");
+}
+
+void MQTT::processLightCommand(const String &component_name, const DynamicJsonDocument &doc)
+{
+    if (doc.containsKey("state"))
+    {
+        String state = doc["state"];
+        Serial.print("State: ");
+        Serial.println(state);
+
+        if (state == "OFF")
+        {
+            reactToLightChange(component_name, 0);
+        }
+        else if (state != "ON")
+            Serial.println("Invalid state value");
+    }
+    else
+        Serial.println("State key not found in JSON");
+
+    if (doc.containsKey("brightness"))
+    {
+        uint8_t brightness = doc["brightness"];
+
+        Serial.print("Brightness: ");
+        Serial.println(brightness);
+
+        reactToLightChange(component_name, brightness);
+    }
+    else
+        Serial.println("Brightness key not found in JSON");
+}
+
+void MQTT::reactToLightChange(const String &component_name, uint8_t brightness)
+{
+    // loopback to mqtt
+    sendLight(component_name, brightness);
+
+    // use elsewhere via callback
+    float percent = brightness / 255.0;
+    if (lightChangeCallback)
+        lightChangeCallback(component_name, percent);
 }
