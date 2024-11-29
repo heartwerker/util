@@ -42,8 +42,70 @@ float mapf(float value, float fromLow, float fromHigh, float toLow, float toHigh
     return (value - fromLow) * (toHigh - toLow) / (fromHigh - fromLow) + toLow;
 }
 
+
 float mapConstrainf(float value, float fromLow, float fromHigh, float toLow, float toHigh) {
     return constrain(mapf(value, fromLow, fromHigh, toLow, toHigh), toLow, toHigh);
+}
+
+// NOT FULLY TESTED yet
+float mapExpf(float value, float fromLow, float fromHigh, float toLow, float toHigh, float curveFactor=2.0) {
+    // Handle edge case where the input range is zero
+    if (fromLow == fromHigh) {
+        return toLow; // Map to the lower bound of the target range
+    }
+
+    // Ensure the curve factor is valid
+    if (curveFactor <= 0) {
+        return NAN; // Invalid curve factor
+    }
+
+    // Shift the input range to make it positive if necessary
+    float shift = (fromLow <= 0) ? -fromLow + 1 : 0;
+
+    // Apply the shift to the input values
+    float shiftedValue = value + shift;
+    float shiftedFromLow = fromLow + shift;
+    float shiftedFromHigh = fromHigh + shift;
+
+    // Normalize the shifted value to the range [0, 1]
+    float normalized = (shiftedValue - shiftedFromLow) / (shiftedFromHigh - shiftedFromLow);
+    normalized = constrain(normalized, 0.0f, 1.0f); // Clamp to [0, 1]
+
+    // Apply exponential curve
+    float expValue = pow(normalized, curveFactor);
+
+    // Map to the target range
+    return expValue * (toHigh - toLow) + toLow;
+}
+
+float mapExpConstraintf(float value, float fromLow, float fromHigh, float toLow, float toHigh, float curveFactor=2.0) {
+    return constrain(mapExpf(value, fromLow, fromHigh, toLow, toHigh, curveFactor), toLow, toHigh);
+}
+
+// NOT FULLY TESTED yet
+float mapLogf(float value, float fromLow, float fromHigh, float toLow, float toHigh) {
+    // Handle the edge case where the input range is zero
+    if (fromLow == fromHigh) {
+        return toLow; // Return the lower bound of the target range if the input range is invalid
+    }
+
+    // Shift the input range to make it positive if necessary
+    float shift = (fromLow <= 0) ? -fromLow + 1 : 0;
+
+    // Shifted values for logarithmic calculation
+    float shiftedValue = value + shift;
+    float shiftedFromLow = fromLow + shift;
+    float shiftedFromHigh = fromHigh + shift;
+
+    // Map `value` to a logarithmic scale
+    float logValue = (log(shiftedValue) - log(shiftedFromLow)) / (log(shiftedFromHigh) - log(shiftedFromLow));
+
+    // Map the logarithmic value to the desired range
+    return logValue * (toHigh - toLow) + toLow;
+}
+
+float mapLogConstrainf(float value, float fromLow, float fromHigh, float toLow, float toHigh) {
+    return constrain(mapLogf(value, fromLow, fromHigh, toLow, toHigh), toLow, toHigh);
 }
 
 float mapConstrainf_withCenter(float value, float fromLow, float fromCenter, float fromHigh, float toLow, float toHigh)
