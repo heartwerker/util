@@ -135,6 +135,11 @@ public:
         return true;
     }
 
+    void didUpdate()
+    {
+        _wasUpdated = true;
+    }
+
     bool wasUpdated()
     {
         if (_wasUpdated)

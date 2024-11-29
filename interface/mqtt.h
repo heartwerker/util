@@ -15,7 +15,8 @@ public:
     void setup();
     void loop();
     void sendComponent(String component_name, String value);
-    void sendLight(String component_name, uint8_t brightness);
+    void sendLightBrightness(String component_name, uint8_t brightness);
+    void sendLight(String component_name, int value);
 
     using LightChangeCallback = std::function<void(const String &name, float percent)>;
     void setLightChangeCallback(LightChangeCallback callback);
@@ -31,6 +32,8 @@ private:
     const char *server;
     int port;
 
+    bool _subscribed = false;
+
     void reconnect();
     void publishDiscoveryMessage(Component component);
     void handleCallback(char *topic, byte *payload, unsigned int length);
@@ -40,11 +43,16 @@ private:
     const String discovery_prefix = "homeassistant";
     const String device_name = DEVICE_NAME;
 
-    Component components[4] = {
-        {"sensor", "rotation"},
-        {"sensor", "position"},
-        {"light", "light_rotation"},
-        {"light", "light_position"},
+    String device_id;
+
+    Component components[5] = {
+        // {"sensor", "rotation"},
+        // {"sensor", "position"},
+        {"light", "rotation_CW"},
+        {"light", "rotation_CCW"},
+        {"light", "rotation_animation_period"},
+        {"light", "position"},
+        {"light", "position_animation_period"}
         // {"switch", "relay"}
     };
 
@@ -63,6 +71,11 @@ void MQTT::setup()
     client.setServer(server, port);
     client.setCallback([this](char *topic, byte *payload, unsigned int length)
                        { this->handleCallback(topic, payload, length); });
+
+    String mac = WiFi.macAddress();
+    mac.replace(":", "");
+    device_id = device_name + String("_") + mac;
+
     reconnect();
 }
 
@@ -72,6 +85,23 @@ void MQTT::loop()
         reconnect();
 
     client.loop();
+
+    if (client.connected() && !_subscribed)
+    {
+        printf("Subscribing to topics\n");
+
+        for (const auto &component : components)
+        {
+            if (component.type == "light")
+            {   
+                printf("Subscribing to %s\n", getCommandTopicFromComponents(component).c_str());
+                client.subscribe(getCommandTopicFromComponents(component).c_str());
+            }
+        }
+        _subscribed = true;
+        printf("Subscribed to all topics\n");
+
+    }
 }
 
 void MQTT::sendComponent(String component_name, String value)
@@ -92,7 +122,7 @@ void MQTT::sendComponent(String component_name, String value)
     Serial.println("Error: Component not found");
 }
 
-void MQTT::sendLight(String component_name, uint8_t brightness)
+void MQTT::sendLightBrightness(String component_name, uint8_t brightness)
 {
     for (const auto &component : components)
     {
@@ -104,12 +134,20 @@ void MQTT::sendLight(String component_name, uint8_t brightness)
             stateDoc["state"] = brightness > 0 ? "ON" : "OFF";
             stateDoc["brightness"] = brightness;
 
+            printf("sendLight %s: %d\n", component_name.c_str(), brightness);
+
             publishState(topic, stateDoc);
             return;
         }
     }
     Serial.println("Error: Component not found");
 }
+
+void MQTT::sendLight(String component_name, int value)
+{
+    sendLightBrightness(component_name, util::mapConstrainf(value, 0, 100, 0, 255));
+}
+
 
 void MQTT::setLightChangeCallback(LightChangeCallback callback)
 {
@@ -121,10 +159,6 @@ void MQTT::publishDiscoveryMessage(Component component)
     String discovery_topic = discovery_prefix + "/" + component.type + "/" + component.name + "/config";
     String state_topic = getStateTopicFromComponents(component);
 
-    String UNIQUE_MAC = WiFi.macAddress();
-    UNIQUE_MAC.replace(":", "");
-
-    String device_id = device_name + String("_") + UNIQUE_MAC;
 
     DynamicJsonDocument doc(1024);
 
@@ -202,25 +236,21 @@ void MQTT::reconnect()
     while (!client.connected())
     {
         Serial.print("Attempting MQTT connection...");
-        if (client.connect("ESP32Client"))
+        if (client.connect(device_id.c_str())) // THIS HAS TO BE UNIQUE per device
         {
             Serial.println("connected");
 
             for (const auto &component : components)
-            {
                 publishDiscoveryMessage(component);
-                if (component.type == "light")
-                {
-                    client.subscribe(getCommandTopicFromComponents(component).c_str());
-                }
-            }
+
+            _subscribed = false;
         }
         else
         {
             Serial.print("failed, rc=");
             Serial.print(client.state());
             Serial.println(" try again in 5 seconds");
-            delay(5000);
+            delay(2000);
         }
     }
 }
@@ -231,7 +261,9 @@ void MQTT::publishState(const String &topic, const DynamicJsonDocument &stateDoc
     serializeJson(stateDoc, stateJson);
 
     if (client.publish(topic.c_str(), stateJson.c_str()))
-        Serial.println("State published successfully");
+    {
+        // Serial.println("State published successfully");
+    }
     else
         Serial.println("Failed to publish state");
 }
@@ -270,7 +302,7 @@ void MQTT::processLightCommand(const String &component_name, const DynamicJsonDo
 void MQTT::reactToLightChange(const String &component_name, uint8_t brightness)
 {
     // loopback to mqtt
-    sendLight(component_name, brightness);
+    sendLightBrightness(component_name, brightness);
 
     // use elsewhere via callback
     float percent = brightness / 255.0;
