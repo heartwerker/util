@@ -45,14 +45,16 @@ private:
 
     String device_id;
 
-    Component components[5] = {
+    Component components[7] = {
         // {"sensor", "rotation"},
         // {"sensor", "position"},
         {"light", "rotation_CW"},
         {"light", "rotation_CCW"},
         {"light", "rotation_animation_period"},
+        {"light", "rotation_animation_amplitude"},
         {"light", "position"},
-        {"light", "position_animation_period"}
+        {"light", "position_animation_period"},
+        {"light", "position_animation_amplitude"}
         // {"switch", "relay"}
     };
 
@@ -93,14 +95,13 @@ void MQTT::loop()
         for (const auto &component : components)
         {
             if (component.type == "light")
-            {   
+            {
                 printf("Subscribing to %s\n", getCommandTopicFromComponents(component).c_str());
                 client.subscribe(getCommandTopicFromComponents(component).c_str());
             }
         }
         _subscribed = true;
         printf("Subscribed to all topics\n");
-
     }
 }
 
@@ -148,7 +149,6 @@ void MQTT::sendLight(String component_name, int value)
     sendLightBrightness(component_name, util::mapConstrainf(value, 0, 100, 0, 255));
 }
 
-
 void MQTT::setLightChangeCallback(LightChangeCallback callback)
 {
     lightChangeCallback = callback;
@@ -158,7 +158,6 @@ void MQTT::publishDiscoveryMessage(Component component)
 {
     String discovery_topic = discovery_prefix + "/" + component.type + "/" + component.name + "/config";
     String state_topic = getStateTopicFromComponents(component);
-
 
     DynamicJsonDocument doc(1024);
 
@@ -220,15 +219,22 @@ void MQTT::handleCallback(char *topic, byte *payload, unsigned int length)
         return;
     }
 
-    if (String(topic).indexOf("/light/") != -1)
+    String topicStr = String(topic);
+
+    if (topicStr.indexOf("/light/") != -1)
         for (const auto &component : components)
-        {
-            if (component.type == "light" && String(topic).indexOf(component.name) != -1)
+            if (component.type == "light")
             {
-                processLightCommand(component.name, doc);
-                return;
+                String componentNameInTopic = topicStr.substring(topicStr.indexOf("/light/") + 7);
+                componentNameInTopic = componentNameInTopic.substring(0, componentNameInTopic.indexOf("/set"));
+
+                // printf("Comparing %s with %s\n", componentNameInTopic.c_str(), component.name.c_str());
+                if (componentNameInTopic == component.name)
+                {
+                    processLightCommand(component.name, doc);
+                    return;
+                }
             }
-        }
 }
 
 void MQTT::reconnect()

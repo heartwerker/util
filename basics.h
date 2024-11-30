@@ -78,6 +78,18 @@ float mapExpf(float value, float fromLow, float fromHigh, float toLow, float toH
     return expValue * (toHigh - toLow) + toLow;
 }
 
+/*
+
+  printf("--------------------\n");
+  for (int i=0;i<100;i+=5)
+    printf("Mapping Log: %d -> %f\n", i, util::mapExpConstraintf(i, 0, 100, 0, 1));
+  printf("--------------------\n");
+  for (int i=0;i<100;i+=5)
+    printf("Mapping Log: %d -> %f\n", i, util::mapExpConstraintf(i, 0, 100, 0, 100));
+  printf("--------------------\n");
+  
+  */
+
 float mapExpConstraintf(float value, float fromLow, float fromHigh, float toLow, float toHigh, float curveFactor=2.0) {
     return constrain(mapExpf(value, fromLow, fromHigh, toLow, toHigh, curveFactor), toLow, toHigh);
 }
